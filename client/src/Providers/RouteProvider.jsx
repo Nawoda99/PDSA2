@@ -4,6 +4,7 @@ import Applayout from "../Layouts/applayout";
 import Login from "../pages/Login";
 import ProtectedRoute from "./ProtectedRoute";
 import AuthLayout from "../Layouts/authLayout";
+import HanoiGame from "../pages/HanoiTower/game";
 
 export default function RouteProvider() {
   return (
@@ -26,6 +27,7 @@ export default function RouteProvider() {
           }
         >
           <Route path="/" element={<Home />} />
+          <Route path="/hanoi" element={<HanoiGame/>} />
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />

@@ -56,6 +56,7 @@ export const TopBar = ({ onToggleSidebar }) => {
       //path: "/n-queens",
       icon: Crown,
     },
+    { name: "Tower of Hanoi", path: "/hanoi", icon: GamepadIcon },
   ];
 
   const displayUser = useMemo(
