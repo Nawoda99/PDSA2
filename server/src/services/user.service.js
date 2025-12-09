@@ -2,35 +2,33 @@ const User = require("../models/User");
 
 class UserService {
   async findOrCreateUser(username) {
-    let user = await User.findOne({ username });
-    if (!user) {
-      user = new User({ username });
-      await user.save();
-    }
+    const [user, created] = await User.findOrCreate({
+      where: { username },
+      defaults: { username },
+    });
     return user;
   }
 
   async findUserById(userId) {
-    const user = await User.findById(userId);
+    const user = await User.findByPk(userId);
     return user;
   }
 
   async findUserByUsername(username) {
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ where: { username } });
     return user;
   }
 
   async getAllUsers() {
-    const users = await User.find().select("-__v").sort({ createdAt: -1 });
+    const users = await User.findAll({
+      order: [["createdAt", "DESC"]],
+    });
     return users;
   }
 
   async updateUser(userId, updateData) {
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return null;
-    }
+    const user = await User.findByPk(userId);
+    if (!user) return null;
 
     if (updateData.username) user.username = updateData.username;
     if (typeof updateData.isActive !== "undefined")
@@ -41,17 +39,20 @@ class UserService {
   }
 
   async deleteUser(userId) {
-    const user = await User.findByIdAndDelete(userId);
+    const user = await User.findByPk(userId);
+    if (!user) return null;
+
+    await user.destroy();
     return user;
   }
 
   async checkUsernameExists(username) {
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ where: { username } });
     return !!user;
   }
 
   async getActiveUsersCount() {
-    const count = await User.countDocuments({ isActive: true });
+    const count = await User.count({ where: { isActive: true } });
     return count;
   }
 }

@@ -1,9 +1,11 @@
-const { connectDB } = require("../config/DB");
+const sequelize = require("../config/DB");
 require("dotenv").config();
 
 const User = require("./User");
+const EightQueens = require("./eightQueens");
 
 module.exports = {
-  connectDB,
+  sequelize,
   User,
+  EightQueens,
 };
