@@ -1,18 +1,37 @@
-const mongoose = require("mongoose");
+const { Sequelize } = require("sequelize");
 require("dotenv").config();
+
+const sequelize = new Sequelize(
+  process.env.DB_NAME || "pdsa_db",
+  process.env.DB_USER || "root",
+  process.env.DB_PASSWORD || "",
+  {
+    host: process.env.DB_HOST || "localhost",
+    port: process.env.DB_PORT || 3306,
+    dialect: "mysql",
+    logging: false,
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 30000,
+      idle: 10000,
+    },
+  }
+);
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(
-      process.env.MONGO_URI || "mongodb://localhost:27017/your-database-name"
-    );
-    console.log("MongoDB connection initiated");
+    await sequelize.authenticate();
+    console.log("MySQL connection initiated");
+
+    await sequelize.sync({ alter: false });
+    console.log("Database synced");
   } catch (error) {
-    console.error("MongoDB connection failed:", error.message);
+    console.error("MySQL connection failed:", error.message);
     process.exit(1);
   }
 };
 
 connectDB();
 
-module.exports = mongoose;
+module.exports = sequelize;
