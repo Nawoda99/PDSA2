@@ -3,6 +3,7 @@ const cors = require("cors");
 const userRoutes = require("./routes/user.route");
 const { errorHandler } = require("./middlewares/errorHandler");
 const eightQueenRoutes = require("./routes/eightQueens.route");
+const trafficSimulationRoutes = require("./routes/trafficSimulation.route");
 
 const app = express();
 
@@ -18,8 +19,9 @@ app.get("/api", (req, res) => {
   });
 });
 
-app.use("/users", userRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/eightQueens", eightQueenRoutes);
+app.use("/api/traffic", trafficSimulationRoutes);
 
 app.use(errorHandler);
 
