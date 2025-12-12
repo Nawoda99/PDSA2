@@ -6,6 +6,7 @@ const eightQueenRoutes = require("./routes/eightQueens.route");
 const trafficSimulationRoutes = require("./routes/trafficSimulation.route");
 const travelingSalesmanRoutes = require("./routes/travelingSalesman.route");
 const hanoiTowerRoutes = require("./routes/hanoiTower.route");
+const snakeGameRoutes = require('./routes/snakeGameRoutes');
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.get("/api", (req, res) => {
 });
 
 app.use("/api/users", userRoutes);
+app.use('/api/snake-game', snakeGameRoutes);
 app.use("/api/eightQueens", eightQueenRoutes);
 app.use("/api/traffic", trafficSimulationRoutes);
 app.use("/api/tsp", travelingSalesmanRoutes);
