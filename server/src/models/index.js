@@ -6,6 +6,7 @@ const EightQueens = require("./eightQueens");
 const HanoiTower = require("./hanoiTower");
 const QueensPerformance = require("./queensPerformance");
 const TrafficSimulation = require("./trafficeSimulations");
+const TravelingSalesman = require("./travelingSalesman");
 
 module.exports = {
   sequelize,
@@ -13,5 +14,6 @@ module.exports = {
   EightQueens,
   QueensPerformance,
   TrafficSimulation,
+  TravelingSalesman,
   HanoiTower,
 };
