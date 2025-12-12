@@ -1,5 +1,4 @@
 import { Routes, Route, Navigate, BrowserRouter } from "react-router-dom";
-import Home from "../pages/Home";
 import Applayout from "../Layouts/applayout";
 import Login from "../pages/Login";
 import ProtectedRoute from "./ProtectedRoute";
@@ -8,6 +7,7 @@ import HanoiGame from "../pages/HanoiTower/HanoiTower";
 import NQueens from "../pages/Eight-Queens/EightQueens";
 import EightQueens from "../pages/Eight-Queens/EightQueens";
 import TrafficSimulation from "../pages/TrafficSimulation/TrafficSimulation";
+import Dashboard from "../pages/Dashboard";
 import TravelingSalesman from "../pages/TravelingSalesman/TravelingSalesman";
 
 export default function RouteProvider() {
@@ -30,7 +30,7 @@ export default function RouteProvider() {
             </ProtectedRoute>
           }
         >
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Dashboard />} />
           <Route path="/hanoi" element={<HanoiGame />} />
           <Route path="/eight-queens" element={<EightQueens />} />
           <Route path="/traffic-simulation" element={<TrafficSimulation />} />
