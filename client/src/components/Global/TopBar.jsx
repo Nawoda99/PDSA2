@@ -11,6 +11,7 @@ import {
   Crown,
   Home,
   TrafficCone,
+  MenuIcon,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../Providers/AuthProvider";
@@ -63,6 +64,7 @@ export const TopBar = ({ onToggleSidebar }) => {
       path: "/traffic-simulation",
       icon: TrafficCone,
     },
+    { name: "Traveling Salesman", path: "/traveling-salesman", icon: MenuIcon },
   ];
 
   const displayUser = useMemo(

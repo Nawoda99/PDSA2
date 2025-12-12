@@ -8,6 +8,7 @@ import HanoiGame from "../pages/HanoiTower/game";
 import NQueens from "../pages/Eight-Queens/EightQueens";
 import EightQueens from "../pages/Eight-Queens/EightQueens";
 import TrafficSimulation from "../pages/TrafficSimulation/TrafficSimulation";
+import TravelingSalesman from "../pages/TravelingSalesman/TravelingSalesman";
 
 export default function RouteProvider() {
   return (
@@ -33,6 +34,7 @@ export default function RouteProvider() {
           <Route path="/hanoi" element={<HanoiGame />} />
           <Route path="/eight-queens" element={<EightQueens />} />
           <Route path="/traffic-simulation" element={<TrafficSimulation />} />
+          <Route path="/traveling-salesman" element={<TravelingSalesman />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />
