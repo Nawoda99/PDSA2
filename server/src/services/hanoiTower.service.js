@@ -273,34 +273,48 @@ async function saveHanoiSession(sessionData) {
       playerName,
       disks,
       pegs,
-      playerMoves,
-      playerSequence,
-      algorithms,
+      moves, // Total moves from frontend
+      time, // Time in seconds from frontend
+      playerMoves, // Array of strings like ["A->C", "B->D"]
     } = sessionData;
 
     if (!playerName || playerName.trim().length < 2) {
       throw new Error("Player name must be at least 2 characters");
     }
 
-    if (disks < 5 || disks > 10) {
-      throw new Error("Disks must be between 5 and 10");
+    if (disks < 3 || disks > 10) {
+  throw new Error("Disks must be between 3 and 10");
+}
+
+if (pegs < 3 || pegs > 4) {
+  throw new Error("Pegs must be 3 or 4");
+}
+
+    if (!Array.isArray(playerMoves) || playerMoves.length === 0) {
+      throw new Error("Player moves are required");
     }
 
-    if (pegs < 3 || pegs > 4) {
-      throw new Error("Pegs must be 3 or 4");
-    }
+    // Convert playerMoves string array to sequence objects
+    const playerSequence = playerMoves.map((moveStr, index) => {
+      if (typeof moveStr === 'string') {
+        const [from, to] = moveStr.split('->');
+        return { from, to, disk: index + 1 };
+      }
+      return moveStr;
+    });
 
-    if (!Array.isArray(playerSequence) || playerSequence.length === 0) {
-      throw new Error("Player sequence is required");
-    }
-
+    // Validate the solution
     const validation = validateSolution(playerSequence, disks, pegs);
+
+    // Compute algorithm solutions
+    const algorithms = await computeAlgorithms(disks, pegs);
 
     const session = await HanoiTower.create({
       playerName: playerName.trim(),
       disks,
       pegs,
-      playerMoves,
+      playerMoves: moves,
+      playerTime: time,
       playerSequence,
       isCorrect: validation.valid,
       recursiveDistance: algorithms.recursive?.moves,
@@ -309,12 +323,6 @@ async function saveHanoiSession(sessionData) {
       iterativeDistance: algorithms.iterative?.moves,
       iterativeSequence: algorithms.iterative?.sequence,
       iterativeTimeMs: algorithms.iterative?.timeMs,
-      frameStewartDistance: algorithms.frameStewart?.moves,
-      frameStewartSequence: algorithms.frameStewart?.sequence,
-      frameStewartTimeMs: algorithms.frameStewart?.timeMs,
-      simpleDistance: algorithms.simple?.moves,
-      simpleSequence: algorithms.simple?.sequence,
-      simpleTimeMs: algorithms.simple?.timeMs,
       optimalMoves: algorithms.optimalMoves,
       bestAlgorithm: algorithms.bestAlgorithm,
     });
@@ -324,7 +332,6 @@ async function saveHanoiSession(sessionData) {
     throw new Error(`Failed to save session: ${error.message}`);
   }
 }
-
 
 function generateGame() {
   const disks = Math.floor(Math.random() * 6) + 5; 
