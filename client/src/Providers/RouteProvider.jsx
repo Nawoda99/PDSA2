@@ -4,7 +4,7 @@ import Applayout from "../Layouts/applayout";
 import Login from "../pages/Login";
 import ProtectedRoute from "./ProtectedRoute";
 import AuthLayout from "../Layouts/authLayout";
-import HanoiGame from "../pages/HanoiTower/game";
+import HanoiGame from "../pages/HanoiTower/HanoiTower";
 import NQueens from "../pages/Eight-Queens/EightQueens";
 import EightQueens from "../pages/Eight-Queens/EightQueens";
 import TrafficSimulation from "../pages/TrafficSimulation/TrafficSimulation";
