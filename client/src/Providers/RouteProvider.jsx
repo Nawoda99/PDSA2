@@ -7,6 +7,7 @@ import AuthLayout from "../Layouts/authLayout";
 import HanoiGame from "../pages/HanoiTower/game";
 import NQueens from "../pages/Eight-Queens/EightQueens";
 import EightQueens from "../pages/Eight-Queens/EightQueens";
+import SnakeGame from "../pages/SanakeAndLadder/snakeAndLadder"
 
 export default function RouteProvider() {
   return (
@@ -31,6 +32,7 @@ export default function RouteProvider() {
           <Route path="/" element={<Home />} />
           <Route path="/hanoi" element={<HanoiGame />} />
           <Route path="/eight-queens" element={<EightQueens />} />
+          <Route path="/snake-ladder" element={<SnakeGame/>} />
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />
