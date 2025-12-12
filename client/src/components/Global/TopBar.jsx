@@ -10,6 +10,7 @@ import {
   GamepadIcon,
   Crown,
   Home,
+  TrafficCone,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../Providers/AuthProvider";
@@ -52,11 +53,16 @@ export const TopBar = ({ onToggleSidebar }) => {
   const games = [
     { name: "Home", path: "/", icon: Home },
     {
-      name: "N Queens",
-      //path: "/n-queens",
+      name: "Eight Queens",
+      path: "/eight-queens",
       icon: Crown,
     },
     { name: "Tower of Hanoi", path: "/hanoi", icon: GamepadIcon },
+    {
+      name: "Traffic Simulation",
+      path: "/traffic-simulation",
+      icon: TrafficCone,
+    },
   ];
 
   const displayUser = useMemo(
@@ -404,7 +410,6 @@ export const TopBar = ({ onToggleSidebar }) => {
       }}
     >
       <div className="flex items-center justify-between px-5 py-3.5">
-        {/* Left Side */}
         <div className="flex items-center gap-4">
           <div ref={gamesDropdownRef} className="relative">
             <button

@@ -1,0 +1,25 @@
+const GAMETYPES = {
+  EIGHT_QUEENS: 1,
+  SHORTEST_PATH: 2,
+  PREDICT_VAL_INDEX: 3,
+  REMEMBER_VAL_INDEX: 4,
+  TIC_TAC_TOE: 5,
+};
+
+const ANSWERSTATUS = {
+  PENDING: 1,
+  CORRECT: 2,
+  INCORRECT: 3,
+};
+
+const SORTTYPES = {
+  BUBBLE: 1,
+  QUICK: 2,
+  INSERTION: 3,
+  MERGE: 4,
+  RADIX: 5,
+  SHELL: 6,
+  TIM: 7,
+};
+
+module.exports = { ANSWERSTATUS, GAMETYPES, SORTTYPES };

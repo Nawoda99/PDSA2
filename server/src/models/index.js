@@ -1,9 +1,15 @@
-const { connectDB } = require("../config/DB");
+const sequelize = require("../config/DB");
 require("dotenv").config();
 
 const User = require("./User");
+const EightQueens = require("./eightQueens");
+const QueensPerformance = require("./queensPerformance");
+const TrafficSimulation = require("./trafficeSimulations");
 
 module.exports = {
-  connectDB,
+  sequelize,
   User,
+  EightQueens,
+  QueensPerformance,
+  TrafficSimulation,
 };
