@@ -3,11 +3,11 @@ import axios from "axios";
 import React, { useLayoutEffect, useState } from "react";
 import { useTheme } from "../../Providers/ThemeProvider";
 import { useNotification } from "../../Providers/NotificationProvider";
+import { useAuth } from "../../Providers/AuthProvider";
 import InValQueen from "../../assets/crowinvalid.png";
 import Queen from "../../assets/crown.png";
 import { numberToLetter } from "../../utils/helper-Function";
 
-// Configure axios base URL
 const api = axios.create({
   baseURL: "http://localhost:3001/api",
 });
@@ -15,7 +15,8 @@ const api = axios.create({
 const ChessBoard = ({ bordsize }) => {
   const { theme } = useTheme();
   const { showNotification } = useNotification();
-  const [board, setBoard] = useState([[]]);
+  const { user } = useAuth();
+  const [board, setBoard] = useState([]);
   const [isHint, setIsHint] = useState(false);
   const [hints, setHints] = useState([]);
   const [maxQueens, setMaxQueens] = useState(0);
@@ -26,7 +27,9 @@ const ChessBoard = ({ bordsize }) => {
       const res = await api.post("/eightQueens/createboard", {
         size: bordsize,
       });
-      setBoard(res.data);
+
+      const newBoard = res.data.success ? res.data.data : res.data;
+      setBoard(newBoard);
       setMaxQueens(0);
       setHints([]);
       setIsHint(false);
@@ -42,22 +45,23 @@ const ChessBoard = ({ bordsize }) => {
       return;
     }
 
-    hints.forEach((hint) => {
-      if (hint.cord.row === row && hint.cord.col === col) {
-        hints.splice(hints.indexOf(hint), 1);
-      }
-    });
+    const updatedHints = hints.filter(
+      (hint) => !(hint.cord.row === row && hint.cord.col === col)
+    );
 
     try {
       const res = await api.post("/eightQueens/placequeen", {
-        hints,
+        hints: updatedHints,
         board,
         row,
         col,
       });
-      setHints(res.data.hints);
-      setBoard(res.data.board);
-      setMaxQueens(res.data.board.flat().filter((queen) => queen === 1).length);
+
+      const result = res.data.success ? res.data.data : res.data;
+
+      setHints(result.hints);
+      setBoard(result.board);
+      setMaxQueens(result.board.flat().filter((queen) => queen === 1).length);
     } catch (err) {
       console.error("Error placing queen:", err);
       showNotification("Failed to place queen. Please try again.", "error");
@@ -78,54 +82,97 @@ const ChessBoard = ({ bordsize }) => {
         board,
       });
 
-      if (checkRes.data) {
-        // Correct answer
+      const isValid = checkRes.data.success
+        ? checkRes.data.data.isValid
+        : checkRes.data;
+
+      if (isValid) {
         showNotification(
-          "🎉 Congratulations! You solved the puzzle correctly!",
+          "Congratulations! You solved the puzzle correctly!",
           "success",
-          3000,
-          async () => {
-            try {
-              // Save solution
-              const saveRes = await api.post("/eightQueens/saveSolution", {
-                board: board,
-                player: localStorage.getItem("username"),
-              });
-
-              if (saveRes.data.status === "error") {
-                showNotification(saveRes.data.message, "warning");
-              } else {
-                showNotification("Solution saved successfully!", "success");
-              }
-
-              // Create new board
-              await createNewBoard();
-            } catch (err) {
-              console.error("Error saving solution:", err);
-            }
-          }
+          3000
         );
-      } else {
-        // Incorrect answer
-        showNotification(
-          "❌ Incorrect solution. Try again!",
-          "error",
-          3000,
-          async () => {
+
+        try {
+          const token = localStorage.getItem("token");
+          const saveRes = await api.post(
+            "/eightQueens/saveSolution",
+            {
+              board: board,
+              playerId: user?.id || 1,
+              playerName: user?.username || localStorage.getItem("username"),
+              timeSpent: 0,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          if (saveRes.data.status === "duplicate") {
+            showNotification(
+              saveRes.data.message ||
+                "This solution already exists! Try another one.",
+              "warning",
+              4000
+            );
+            await createNewBoard();
+          } else if (saveRes.data.success) {
+            const progress = saveRes.data.progress;
+            showNotification(
+              `Solution saved! Progress: ${progress.found}/${progress.total} found`,
+              "success",
+              3000
+            );
+
+            if (progress.remaining === 0) {
+              showNotification(
+                "All solutions found! Database reset. Keep playing!",
+                "success",
+                4000
+              );
+            }
+
+            await createNewBoard();
+          } else {
+            showNotification(saveRes.data.message, "warning");
             await createNewBoard();
           }
+        } catch (err) {
+          console.error("Error saving solution:", err);
+          if (err.response?.status === 401) {
+            showNotification("Please login to save your solution", "error");
+          } else {
+            showNotification(
+              err.response?.data?.message || "Failed to save solution",
+              "error"
+            );
+          }
+          await createNewBoard();
+        }
+      } else {
+        showNotification(
+          "Incorrect solution. The queens are threatening each other!",
+          "error",
+          3000
         );
+
+        setTimeout(async () => {
+          await createNewBoard();
+        }, 3000);
       }
     } catch (err) {
       console.error("Error checking solution:", err);
       showNotification(
         "Something went wrong. Creating a new board...",
         "error",
-        3000,
-        async () => {
-          await createNewBoard();
-        }
+        3000
       );
+
+      setTimeout(async () => {
+        await createNewBoard();
+      }, 3000);
     }
   };
 
@@ -136,14 +183,16 @@ const ChessBoard = ({ bordsize }) => {
 
   useLayoutEffect(() => {
     createNewBoard();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bordsize]);
 
   const getHintMessages = (rowIndex, colIndex) => {
     if (!isHint) return "";
     return hints
       .filter(
-        (hint) => hint.cause.row === rowIndex && hint.cause.col === colIndex
+        (hint) =>
+          hint.cause &&
+          hint.cause.row === rowIndex &&
+          hint.cause.col === colIndex
       )
       .map((hint) => hint.message)
       .join(" and ");
@@ -152,14 +201,27 @@ const ChessBoard = ({ bordsize }) => {
   const isInvalidQueen = (rowIndex, colIndex) => {
     return (
       hints.some(
-        (hint) => hint.cord.row === rowIndex && hint.cord.col === colIndex
+        (hint) =>
+          hint.cord && hint.cord.row === rowIndex && hint.cord.col === colIndex
       ) && isHint
     );
   };
 
+  if (!board || board.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div
+          className="text-lg font-semibold"
+          style={{ color: theme.textSecondary }}
+        >
+          Loading board...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col items-center">
-      {/* Control Buttons */}
       <div className="flex items-center justify-end w-full gap-3 mb-4">
         <button
           onClick={() => {
@@ -219,7 +281,6 @@ const ChessBoard = ({ bordsize }) => {
         </button>
       </div>
 
-      {/* Chess Board */}
       <div
         className="inline-grid overflow-hidden shadow-2xl rounded-xl"
         style={{
@@ -252,7 +313,6 @@ const ChessBoard = ({ bordsize }) => {
                 onMouseLeave={() => setHoveredCell(null)}
                 title={hintMessage}
               >
-                {/* Hover Effect */}
                 <div
                   className={`absolute inset-0 transition-opacity duration-200 ${
                     isHovered ? "opacity-20" : "opacity-0"
@@ -262,7 +322,6 @@ const ChessBoard = ({ bordsize }) => {
                   }}
                 />
 
-                {/* Queen Image */}
                 {board[rowIndex][colIndex] === 1 && (
                   <img
                     src={isInvalid ? InValQueen : Queen}
@@ -271,7 +330,6 @@ const ChessBoard = ({ bordsize }) => {
                   />
                 )}
 
-                {/* Hint Indicator */}
                 {isHint && hintMessage && (
                   <div
                     className="absolute w-2 h-2 rounded-full top-1 right-1 animate-pulse"
@@ -289,7 +347,6 @@ const ChessBoard = ({ bordsize }) => {
         )}
       </div>
 
-      {/* Queen Counter */}
       <div
         className="px-6 py-3 mt-4 rounded-lg"
         style={{

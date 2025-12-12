@@ -3,11 +3,13 @@ require("dotenv").config();
 
 const User = require("./User");
 const EightQueens = require("./eightQueens");
+const QueensPerformance = require("./queensPerformance");
 const TrafficSimulation = require("./trafficeSimulations");
 
 module.exports = {
   sequelize,
   User,
   EightQueens,
+  QueensPerformance,
   TrafficSimulation,
 };
