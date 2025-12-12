@@ -1,16 +1,21 @@
-const sequelize = require("./config/DB");
 const app = require("./app");
-const port = process.env.PORT || 3002;
+const { sequelize } = require("./models");
+
+const PORT = process.env.PORT || 3001;
 
 sequelize
   .authenticate()
   .then(() => {
-    console.log("MySQL connected successfully");
-    app.listen(port, () => {
-      console.log(`Server running on port ${port}`);
+    console.log("Database connected successfully");
+
+    return sequelize.sync({ alter: true });
+  })
+  .then(() => {
+    console.log("All tables synced");
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
     });
   })
   .catch((err) => {
-    console.error("MySQL connection error:", err);
-    process.exit(1);
+    console.error("Unable to connect to database:", err);
   });
