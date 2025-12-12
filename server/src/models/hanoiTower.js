@@ -21,7 +21,7 @@ const HanoiTower = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
       validate: {
-        min: 5,
+        min: 3,
         max: 10,
       },
     },
@@ -69,30 +69,7 @@ const HanoiTower = sequelize.define(
       type: DataTypes.FLOAT,
       allowNull: true,
     },
-    frameStewartDistance: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-    frameStewartSequence: {
-      type: DataTypes.JSON,
-      allowNull: true,
-    },
-    frameStewartTimeMs: {
-      type: DataTypes.FLOAT,
-      allowNull: true,
-    },
-    simpleDistance: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-    simpleSequence: {
-      type: DataTypes.JSON,
-      allowNull: true,
-    },
-    simpleTimeMs: {
-      type: DataTypes.FLOAT,
-      allowNull: true,
-    },
+    
     optimalMoves: {
       type: DataTypes.INTEGER,
       allowNull: true,
