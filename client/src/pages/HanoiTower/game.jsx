@@ -157,7 +157,7 @@ export default function HanoiGame() {
         return;
       }
 
-      const res = await fetch('http://localhost:3001/hanoi/game', {
+      const res = await fetch('/hanoi/game', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

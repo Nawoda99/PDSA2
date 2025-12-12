@@ -176,7 +176,7 @@ const SnakeAndLadder = () => {
     try {
       // Node.js Backend API URL (Port 3001)
       const response = await fetch(
-        `http://localhost:3001/api/snake-game/start?n=${boardSize}`
+        `/api/snake-game/start?n=${boardSize}`
       );
 
       if (!response.ok) throw new Error("Server Error");
@@ -247,7 +247,7 @@ const SnakeAndLadder = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:3001/api/snake-game/guess",
+        "/api/snake-game/guess",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
