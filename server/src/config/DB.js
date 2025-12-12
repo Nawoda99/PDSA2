@@ -24,7 +24,9 @@ const connectDB = async () => {
     await sequelize.authenticate();
     console.log("MySQL connection initiated");
 
-    await sequelize.sync({ alter: false });
+    // Changed from { alter: false } to default behavior
+    // This will create tables if they don't exist, but won't alter existing ones
+    await sequelize.sync();
     console.log("Database synced");
   } catch (error) {
     console.error("MySQL connection failed:", error.message);

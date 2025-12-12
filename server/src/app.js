@@ -4,6 +4,7 @@ const userRoutes = require("./routes/user.route");
 const { errorHandler } = require("./middlewares/errorHandler");
 const eightQueenRoutes = require("./routes/eightQueens.route");
 const trafficSimulationRoutes = require("./routes/trafficSimulation.route");
+const path = require("path");
 const travelingSalesmanRoutes = require("./routes/travelingSalesman.route");
 const hanoiTowerRoutes = require("./routes/hanoiTower.route");
 
@@ -19,6 +20,11 @@ app.get("/api", (req, res) => {
     message: "Gaming Server API is running",
     version: "1.0.0",
   });
+});
+app.use(express.static(path.join(__dirname, "client/build")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "client/build", "index.html"));
 });
 
 app.use("/api/users", userRoutes);
