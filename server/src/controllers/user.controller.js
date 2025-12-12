@@ -23,7 +23,7 @@ class UserController {
       }
 
       const token = jwt.sign(
-        { userId: user._id, username: user.username },
+        { userId: user.id, username: user.username },
         process.env.ACCESS_TOKEN_SECRET,
         { expiresIn: "7d" }
       );
@@ -37,7 +37,7 @@ class UserController {
           : "Login successful",
         data: {
           user: {
-            id: user._id,
+            id: user.id,
             username: user.username,
             createdAt: user.createdAt,
           },
@@ -66,7 +66,7 @@ class UserController {
       res.status(200).json({
         success: true,
         data: {
-          id: user._id,
+          id: user.id,
           username: user.username,
           isActive: user.isActive,
           createdAt: user.createdAt,
@@ -95,7 +95,7 @@ class UserController {
       res.status(200).json({
         success: true,
         data: {
-          id: user._id,
+          id: user.id,
           username: user.username,
           isActive: user.isActive,
           createdAt: user.createdAt,
@@ -146,7 +146,7 @@ class UserController {
         success: true,
         message: "User updated successfully",
         data: {
-          id: user._id,
+          id: user.id,
           username: user.username,
           isActive: user.isActive,
         },
@@ -196,7 +196,7 @@ class UserController {
       res.status(200).json({
         success: true,
         data: {
-          id: user._id,
+          id: user.id,
           username: user.username,
           isActive: user.isActive,
           createdAt: user.createdAt,

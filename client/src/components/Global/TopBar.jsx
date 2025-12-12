@@ -10,6 +10,7 @@ import {
   GamepadIcon,
   Crown,
   Home,
+  TrafficCone,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../Providers/AuthProvider";
@@ -57,6 +58,11 @@ export const TopBar = ({ onToggleSidebar }) => {
       icon: Crown,
     },
     { name: "Tower of Hanoi", path: "/hanoi", icon: GamepadIcon },
+    {
+      name: "Traffic Simulation",
+      path: "/traffic-simulation",
+      icon: TrafficCone,
+    },
   ];
 
   const displayUser = useMemo(
