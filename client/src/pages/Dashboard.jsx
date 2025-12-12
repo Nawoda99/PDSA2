@@ -12,6 +12,10 @@ import {
   Activity,
   ChevronRight,
 } from "lucide-react";
+// Import an icon for Snake & Ladder if available, or use a generic one
+// Assuming GiSnake is available from react-icons/gi based on your previous code
+// If not, you can use a generic lucide-react icon or install react-icons
+// for this example, I'll use a placeholder text icon 🐍
 
 const Dashboard = () => {
   const { theme } = useTheme();
@@ -23,6 +27,9 @@ const Dashboard = () => {
     queens: { played: 0, solved: 0, avgTime: 0, totalSolutions: 0 },
     traffic: { played: 0, correct: 0, avgTime: 0, accuracy: 0 },
     tsp: { played: 0, avgCost: 0, bestCost: 0, totalCities: 0 },
+    // --- NEW: Snake & Ladder Stats ---
+    snake: { played: 0, won: 0, avgRolls: 0, bestRolls: 0 }, 
+    // ---------------------------------
     overall: { totalGames: 0, totalCorrect: 0, totalTime: 0, successRate: 0 },
   });
 
@@ -33,12 +40,17 @@ const Dashboard = () => {
   const fetchDashboardStats = async () => {
     setLoading(true);
     try {
-      const [hanoiRes, queensRes, trafficRes, tspRes] =
+      // Add the new API call for Snake & Ladder stats
+      // Ensure your backend has an endpoint like /api/snake-game/stats/:username or similar
+      // If not, you might need to fetch all games and filter on the frontend
+      const [hanoiRes, queensRes, trafficRes, tspRes, snakeRes] =
         await Promise.allSettled([
           api.get(`/hanoi/stats/${user.username}`),
           api.get(`/eightQueens/player/${user.id}`),
           api.get(`/traffic/history/${user.id}`),
           api.get(`/tsp/stats/${user.username}`),
+          // --- NEW API CALL ---
+          api.get(`/snake-game/stats/${user.username}`), // Verify this endpoint!
         ]);
 
       let hanoiData = { played: 0, solved: 0, avgMoves: 0, bestTime: 0 };
@@ -114,16 +126,38 @@ const Dashboard = () => {
             : 0;
       }
 
+      // --- NEW: Process Snake & Ladder stats ---
+      let snakeData = { played: 0, won: 0, avgRolls: 0, bestRolls: 0 };
+      if (snakeRes.status === "fulfilled" && snakeRes.value.data.success) {
+        // Adjust 'data.data' based on your actual API response structure
+        const games = Array.isArray(snakeRes.value.data.data)
+          ? snakeRes.value.data.data
+          : [];
+        snakeData.played = games.length;
+        // Assuming 'isCorrect' or 'won' indicates a win/correct guess
+        snakeData.won = games.filter((g) => g.isCorrect).length; 
+        
+        // Assuming you store 'rolls' or something similar. 
+        // If you store 'timeTaken', calculate avgTime instead.
+        // For now, let's assume you want to show games played and wins.
+        // If you have a score or rolls, you can calculate averages here.
+      }
+      // ----------------------------------------
+
       const totalGames =
         hanoiData.played +
         queensData.played +
         trafficData.played +
-        tspData.played;
+        tspData.played +
+        snakeData.played; // Add snake games
+
       const totalCorrect =
         hanoiData.solved +
         queensData.solved +
         trafficData.correct +
-        tspData.played;
+        tspData.played + // Assuming playing TSP counts as "correct" completion for now
+        snakeData.won; // Add snake wins
+
       const successRate =
         totalGames > 0 ? (totalCorrect / totalGames) * 100 : 0;
 
@@ -132,6 +166,7 @@ const Dashboard = () => {
         queens: queensData,
         traffic: trafficData,
         tsp: tspData,
+        snake: snakeData, // Add to state
         overall: {
           totalGames,
           totalCorrect,
@@ -233,6 +268,29 @@ const Dashboard = () => {
         },
       ],
     },
+    // --- NEW: Snake & Ladder Card ---
+    {
+      id: "snake",
+      title: "Snakes & Ladders",
+      icon: "🐍", // Use an emoji or a proper Icon component
+      color: "#27ae60", // Green color for snakes
+      path: "/snake-ladder", // Ensure this matches your route in App.jsx
+      stats: [
+        { label: "Games Played", value: stats.snake.played, icon: Activity },
+        {
+          label: "Games Won",
+          value: stats.snake.won,
+          icon: Trophy,
+        },
+        // Add more specific stats here if available, e.g., Avg Rolls
+        {
+           label: "Win Rate",
+           value: stats.snake.played > 0 ? `${((stats.snake.won / stats.snake.played) * 100).toFixed(0)}%` : "0%",
+           icon: TrendingUp
+        }
+      ],
+    },
+    // --------------------------------
   ];
 
   const overallStats = [
@@ -337,7 +395,7 @@ const Dashboard = () => {
       >
         Game Statistics
       </h2>
-      <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2 lg:grid-cols-3"> {/* Changed grid cols to fit 5 cards better */}
         {gameCards.map((game) => (
           <div
             key={game.id}
@@ -409,7 +467,7 @@ const Dashboard = () => {
       >
         Quick Actions
       </h2>
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-5"> {/* Adjusted for 5 buttons */}
         {gameCards.map((game) => (
           <button
             key={game.id}
@@ -526,6 +584,22 @@ const Dashboard = () => {
                   </p>
                 </div>
               )}
+              {/* --- NEW: Snake Achievement --- */}
+              {stats.snake.played >= 5 && (
+                <div
+                  className="p-4 text-center rounded-lg"
+                  style={{ background: `${theme.primary}10` }}
+                >
+                  <div className="mb-2 text-4xl">🎲</div>
+                  <p className="font-bold" style={{ color: theme.textPrimary }}>
+                    Luck Master
+                  </p>
+                  <p className="text-xs" style={{ color: theme.textSecondary }}>
+                    Played 5+ Snake games
+                  </p>
+                </div>
+              )}
+              {/* ------------------------------- */}
             </div>
           </div>
         </div>
