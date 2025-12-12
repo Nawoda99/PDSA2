@@ -5,6 +5,7 @@ const { errorHandler } = require("./middlewares/errorHandler");
 const eightQueenRoutes = require("./routes/eightQueens.route");
 const trafficSimulationRoutes = require("./routes/trafficSimulation.route");
 const travelingSalesmanRoutes = require("./routes/travelingSalesman.route");
+const hanoiTowerRoutes = require("./routes/hanoiTower.route");
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/eightQueens", eightQueenRoutes);
 app.use("/api/traffic", trafficSimulationRoutes);
 app.use("/api/tsp", travelingSalesmanRoutes);
+app.use("/api/hanoi", hanoiTowerRoutes);
 
 app.use(errorHandler);
 

@@ -3,6 +3,7 @@ require("dotenv").config();
 
 const User = require("./User");
 const EightQueens = require("./eightQueens");
+const HanoiTower = require("./hanoiTower");
 const QueensPerformance = require("./queensPerformance");
 const TrafficSimulation = require("./trafficeSimulations");
 const TravelingSalesman = require("./travelingSalesman");
@@ -14,4 +15,5 @@ module.exports = {
   QueensPerformance,
   TrafficSimulation,
   TravelingSalesman,
+  HanoiTower,
 };
