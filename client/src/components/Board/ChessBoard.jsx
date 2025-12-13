@@ -9,7 +9,7 @@ import Queen from "../../assets/crown.png";
 import { numberToLetter } from "../../utils/helper-Function";
 
 const api = axios.create({
-  baseURL: "http://localhost:3001/api",
+  baseURL: import.meta.env.VITE_API_URL,
 });
 
 const ChessBoard = ({ bordsize }) => {
