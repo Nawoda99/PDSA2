@@ -12,7 +12,6 @@ import {
   Activity,
   ChevronRight,
 } from "lucide-react";
-
 const Dashboard = () => {
   const { theme } = useTheme();
   const { user } = useAuth();
@@ -23,6 +22,7 @@ const Dashboard = () => {
     queens: { played: 0, solved: 0, avgTime: 0, totalSolutions: 0 },
     traffic: { played: 0, correct: 0, avgTime: 0, accuracy: 0 },
     tsp: { played: 0, avgCost: 0, bestCost: 0, totalCities: 0 },
+    snake: { played: 0, won: 0, avgRolls: 0, bestRolls: 0 },
     overall: { totalGames: 0, totalCorrect: 0, totalTime: 0, successRate: 0 },
   });
 
@@ -33,12 +33,13 @@ const Dashboard = () => {
   const fetchDashboardStats = async () => {
     setLoading(true);
     try {
-      const [hanoiRes, queensRes, trafficRes, tspRes] =
+      const [hanoiRes, queensRes, trafficRes, tspRes, snakeRes] =
         await Promise.allSettled([
           api.get(`/hanoi/stats/${user.username}`),
           api.get(`/eightQueens/player/${user.id}`),
           api.get(`/traffic/history/${user.id}`),
           api.get(`/tsp/stats/${user.username}`),
+          api.get(`/snake-game/${user.username}`),
         ]);
 
       let hanoiData = { played: 0, solved: 0, avgMoves: 0, bestTime: 0 };
@@ -59,7 +60,6 @@ const Dashboard = () => {
             : 0;
       }
 
-      // Process Queens stats
       let queensData = { played: 0, solved: 0, avgTime: 0, totalSolutions: 0 };
       if (queensRes.status === "fulfilled" && queensRes.value.data.success) {
         const games = Array.isArray(queensRes.value.data.data)
@@ -75,7 +75,6 @@ const Dashboard = () => {
             : 0;
       }
 
-      // Process Traffic stats
       let trafficData = { played: 0, correct: 0, avgTime: 0, accuracy: 0 };
       if (trafficRes.status === "fulfilled" && trafficRes.value.data.success) {
         const games = Array.isArray(trafficRes.value.data.data)
@@ -92,38 +91,58 @@ const Dashboard = () => {
           games.length > 0 ? (trafficData.correct / games.length) * 100 : 0;
       }
 
-      // Process TSP stats
       let tspData = { played: 0, avgCost: 0, bestCost: 0, totalCities: 0 };
       if (tspRes.status === "fulfilled" && tspRes.value.data.success) {
-        const games = Array.isArray(tspRes.value.data.data)
-          ? tspRes.value.data.data
+        const data = tspRes.value.data.data;
+
+        if (data && typeof data === "object" && !Array.isArray(data)) {
+          tspData.played = data.totalGames || 0;
+          tspData.avgCost = Math.round(data.avgDistance || 0);
+          tspData.bestCost = data.bestDistance || 0;
+          tspData.totalCities = data.numberOfCities || 0;
+        } else if (Array.isArray(data)) {
+          tspData.played = data.length;
+          tspData.avgCost =
+            data.length > 0
+              ? Math.round(
+                  data.reduce((sum, g) => sum + (g.totalCost || 0), 0) /
+                    data.length
+                )
+              : 0;
+          tspData.bestCost =
+            data.length > 0
+              ? Math.min(...data.map((g) => g.totalCost || Infinity))
+              : 0;
+          tspData.totalCities =
+            data.length > 0
+              ? data.reduce((sum, g) => sum + (g.citiesVisited || 0), 0)
+              : 0;
+        }
+      }
+
+      let snakeData = { played: 0, won: 0, avgRolls: 0, bestRolls: 0 };
+      if (snakeRes.status === "fulfilled" && snakeRes.value.data.success) {
+        const games = Array.isArray(snakeRes.value.data.data)
+          ? snakeRes.value.data.data
           : [];
-        tspData.played = games.length;
-        tspData.avgCost =
-          games.length > 0
-            ? games.reduce((sum, g) => sum + (g.totalCost || 0), 0) /
-              games.length
-            : 0;
-        tspData.bestCost =
-          games.length > 0
-            ? Math.min(...games.map((g) => g.totalCost || Infinity))
-            : 0;
-        tspData.totalCities =
-          games.length > 0
-            ? games.reduce((sum, g) => sum + (g.citiesVisited || 0), 0)
-            : 0;
+        snakeData.played = games.length;
+        snakeData.won = games.filter((g) => g.isCorrect).length;
       }
 
       const totalGames =
         hanoiData.played +
         queensData.played +
         trafficData.played +
-        tspData.played;
+        tspData.played +
+        snakeData.played;
+
       const totalCorrect =
         hanoiData.solved +
         queensData.solved +
         trafficData.correct +
-        tspData.played;
+        tspData.played +
+        snakeData.won;
+
       const successRate =
         totalGames > 0 ? (totalCorrect / totalGames) * 100 : 0;
 
@@ -132,6 +151,7 @@ const Dashboard = () => {
         queens: queensData,
         traffic: trafficData,
         tsp: tspData,
+        snake: snakeData,
         overall: {
           totalGames,
           totalCorrect,
@@ -230,6 +250,30 @@ const Dashboard = () => {
               ? "-"
               : stats.tsp.bestCost.toFixed(0),
           icon: Trophy,
+        },
+      ],
+    },
+
+    {
+      id: "snake",
+      title: "Snakes & Ladders",
+      icon: "🐍",
+      color: "#27ae60",
+      path: "/snake-ladder",
+      stats: [
+        { label: "Games Played", value: stats.snake.played, icon: Activity },
+        {
+          label: "Games Won",
+          value: stats.snake.won,
+          icon: Trophy,
+        },
+        {
+          label: "Win Rate",
+          value:
+            stats.snake.played > 0
+              ? `${((stats.snake.won / stats.snake.played) * 100).toFixed(0)}%`
+              : "0%",
+          icon: TrendingUp,
         },
       ],
     },
@@ -337,7 +381,7 @@ const Dashboard = () => {
       >
         Game Statistics
       </h2>
-      <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2 lg:grid-cols-3">
         {gameCards.map((game) => (
           <div
             key={game.id}
@@ -409,7 +453,7 @@ const Dashboard = () => {
       >
         Quick Actions
       </h2>
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
         {gameCards.map((game) => (
           <button
             key={game.id}
@@ -523,6 +567,21 @@ const Dashboard = () => {
                   </p>
                   <p className="text-xs" style={{ color: theme.textSecondary }}>
                     Completed 5+ TSP routes
+                  </p>
+                </div>
+              )}
+
+              {stats.snake.played >= 5 && (
+                <div
+                  className="p-4 text-center rounded-lg"
+                  style={{ background: `${theme.primary}10` }}
+                >
+                  <div className="mb-2 text-4xl">🎲</div>
+                  <p className="font-bold" style={{ color: theme.textPrimary }}>
+                    Luck Master
+                  </p>
+                  <p className="text-xs" style={{ color: theme.textSecondary }}>
+                    Played 5+ Snake games
                   </p>
                 </div>
               )}

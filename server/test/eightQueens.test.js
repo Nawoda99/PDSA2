@@ -1,4 +1,3 @@
-// Mock the database model BEFORE importing the service
 jest.mock("../src/models/eightQueens", () => ({
   findAll: jest.fn(),
   findOne: jest.fn(),
@@ -7,7 +6,6 @@ jest.mock("../src/models/eightQueens", () => ({
   deleteMany: jest.fn().mockResolvedValue(true),
 }));
 
-// Mock the database configuration to prevent connection attempts
 jest.mock("../src/config/DB", () => {
   const SequelizeMock = require("sequelize-mock");
   const dbMock = new SequelizeMock();
@@ -81,7 +79,6 @@ describe("Eight Queens Service Tests", () => {
       const solutions = await getSolutions(4);
       expect(solutions.length).toBeGreaterThan(0);
 
-      // Check each solution has exactly n queens
       solutions.forEach((solution) => {
         const queenCount = solution.reduce(
           (sum, row) => sum + row.reduce((rowSum, cell) => rowSum + cell, 0),
@@ -98,7 +95,6 @@ describe("Eight Queens Service Tests", () => {
         const n = solution.length;
         const queens = [];
 
-        // Find all queen positions
         for (let i = 0; i < n; i++) {
           for (let j = 0; j < n; j++) {
             if (solution[i][j] === 1) {
@@ -107,17 +103,13 @@ describe("Eight Queens Service Tests", () => {
           }
         }
 
-        // Check no two queens threaten each other
         for (let i = 0; i < queens.length; i++) {
           for (let j = i + 1; j < queens.length; j++) {
             const q1 = queens[i];
             const q2 = queens[j];
 
-            // Same row
             expect(q1.row).not.toBe(q2.row);
-            // Same column
             expect(q1.col).not.toBe(q2.col);
-            // Same diagonal
             expect(Math.abs(q1.row - q2.row)).not.toBe(
               Math.abs(q1.col - q2.col)
             );
@@ -146,9 +138,9 @@ describe("Eight Queens Service Tests", () => {
 
     test("should detect queen in same row", async () => {
       const board = await generateBoard(8);
-      board[0][0] = 1; // Place queen at (0,0)
+      board[0][0] = 1;
 
-      const hints = await isSafe([], board, 0, 4); // Try to place at (0,4)
+      const hints = await isSafe([], board, 0, 4);
       const rowConflict = hints.find(
         (h) => h.message === "Queen in the same row"
       );
@@ -158,9 +150,9 @@ describe("Eight Queens Service Tests", () => {
 
     test("should detect queen in same column", async () => {
       const board = await generateBoard(8);
-      board[0][3] = 1; // Place queen at (0,3)
+      board[0][3] = 1;
 
-      const hints = await isSafe([], board, 5, 3); // Try to place at (5,3)
+      const hints = await isSafe([], board, 5, 3);
       const colConflict = hints.find(
         (h) => h.message === "Queen in the same column"
       );
@@ -170,9 +162,9 @@ describe("Eight Queens Service Tests", () => {
 
     test("should detect queen in same diagonal", async () => {
       const board = await generateBoard(8);
-      board[2][2] = 1; // Place queen at (2,2)
+      board[2][2] = 1;
 
-      const hints = await isSafe([], board, 4, 4); // Try to place at (4,4)
+      const hints = await isSafe([], board, 4, 4);
       const diagConflict = hints.find(
         (h) => h.message === "Queen in the same diagonal"
       );
@@ -181,17 +173,17 @@ describe("Eight Queens Service Tests", () => {
 
     test("should detect multiple conflicts", async () => {
       const board = await generateBoard(8);
-      board[0][0] = 1; // Queen at (0,0)
-      board[0][4] = 1; // Queen at (0,4)
-      board[4][0] = 1; // Queen at (4,0)
+      board[0][0] = 1;
+      board[0][4] = 1;
+      board[4][0] = 1;
 
-      const hints = await isSafe([], board, 0, 2); // Try to place at (0,2)
+      const hints = await isSafe([], board, 0, 2);
       expect(hints.length).toBeGreaterThan(1);
     });
 
     test("should filter out hints when removing queen", async () => {
       const board = await generateBoard(8);
-      board[0][0] = 1; // Place queen
+      board[0][0] = 1;
 
       const initialHints = [
         {
@@ -220,26 +212,26 @@ describe("Eight Queens Service Tests", () => {
 
     test("should fail to place queen in unsafe position", async () => {
       const board = await generateBoard(8);
-      board[0][0] = 1; // Place first queen
+      board[0][0] = 1;
 
-      const result = await placeQueen([], board, 0, 4); // Try same row
+      const result = await placeQueen([], board, 0, 4);
       expect(result.answerstatus).toBe(ANSWERSTATUS.INCORRECT);
       expect(result.hints.length).toBeGreaterThan(0);
     });
 
     test("should toggle queen placement (remove queen)", async () => {
       const board = await generateBoard(8);
-      board[0][0] = 1; // Queen present
+      board[0][0] = 1;
 
       const result = await placeQueen([], board, 0, 0);
-      expect(result.board[0][0]).toBe(0); // Queen removed
+      expect(result.board[0][0]).toBe(0);
     });
 
     test("should return hints for unsafe placement", async () => {
       const board = await generateBoard(8);
       board[1][1] = 1;
 
-      const result = await placeQueen([], board, 3, 3); // Diagonal conflict
+      const result = await placeQueen([], board, 3, 3);
       expect(result.hints.length).toBeGreaterThan(0);
       expect(result.answerstatus).toBe(ANSWERSTATUS.INCORRECT);
     });
@@ -259,7 +251,7 @@ describe("Eight Queens Service Tests", () => {
       board[0][0] = 1;
       board[1][1] = 1;
       board[2][2] = 1;
-      board[3][3] = 1; // All in diagonal - invalid
+      board[3][3] = 1;
 
       const isValid = await checkSolutionWithBoard(board);
       expect(isValid).toBe(false);
@@ -268,7 +260,7 @@ describe("Eight Queens Service Tests", () => {
     test("should reject incomplete solution", async () => {
       const board = await generateBoard(4);
       board[0][0] = 1;
-      board[1][2] = 1; // Only 2 queens
+      board[1][2] = 1;
 
       const isValid = await checkSolutionWithBoard(board);
       expect(isValid).toBe(false);
@@ -298,7 +290,7 @@ describe("Eight Queens Service Tests", () => {
 
       const timeTaken = endTime - startTime;
       expect(solutions).toHaveLength(92);
-      expect(timeTaken).toBeLessThan(5000); // Should complete within 5 seconds
+      expect(timeTaken).toBeLessThan(5000);
       console.log(
         `8-Queens: Generated 92 solutions in ${timeTaken.toFixed(2)}ms`
       );
@@ -338,21 +330,17 @@ describe("Eight Queens Service Tests", () => {
     test("should handle placing queen at board corners", async () => {
       const board = await generateBoard(8);
 
-      // Top-left
       let result = await placeQueen([], board, 0, 0);
       expect(result.board[0][0]).toBe(1);
 
-      // Top-right
       const board2 = await generateBoard(8);
       result = await placeQueen([], board2, 0, 7);
       expect(result.board[0][7]).toBe(1);
 
-      // Bottom-left
       const board3 = await generateBoard(8);
       result = await placeQueen([], board3, 7, 0);
       expect(result.board[7][0]).toBe(1);
 
-      // Bottom-right
       const board4 = await generateBoard(8);
       result = await placeQueen([], board4, 7, 7);
       expect(result.board[7][7]).toBe(1);
@@ -374,13 +362,11 @@ describe("Eight Queens Service Tests", () => {
     test("should use backtracking algorithm correctly", async () => {
       const solutions = await getSolutions(4);
 
-      // All solutions should be unique
       const uniqueSolutions = new Set(solutions.map((s) => JSON.stringify(s)));
       expect(uniqueSolutions.size).toBe(solutions.length);
     });
 
     test("should explore all possible valid placements", async () => {
-      // For 8x8, we know there are exactly 92 solutions
       const solutions = await getSolutions(8);
       expect(solutions).toHaveLength(92);
     });
@@ -396,15 +382,12 @@ describe("Eight Queens Service Tests", () => {
 
   describe("Integration Tests", () => {
     test("should complete full game workflow", async () => {
-      // 1. Generate board
       const board = await generateBoard(4);
       expect(board).toBeDefined();
 
-      // 2. Get all solutions
       const solutions = await getSolutions(4);
       expect(solutions).toHaveLength(2);
 
-      // 3. Place queens to match first solution
       const targetSolution = solutions[0];
       const gameBoard = await generateBoard(4);
 
@@ -416,7 +399,6 @@ describe("Eight Queens Service Tests", () => {
         }
       }
 
-      // 4. Check if solution is valid
       const isValid = await checkSolutionWithBoard(gameBoard);
       expect(isValid).toBe(true);
     });
@@ -443,18 +425,15 @@ describe("Eight Queens Service Tests", () => {
   });
 });
 
-// Manual test runner for quick testing without Jest
 module.exports = {
   testEightQueens: async () => {
     console.log("Running Eight Queens Manual Tests...\n");
 
-    // Test 1: Generate Board
     console.log("--- Test 1: Generate Board ---");
     const board = await generateBoard(8);
     console.log(`Board size: ${board.length}x${board[0].length}`);
     console.log("✓ Board generated successfully\n");
 
-    // Test 2: Get Solutions
     console.log("--- Test 2: Get Solutions ---");
     const startTime = performance.now();
     const solutions = await getSolutions(8);
@@ -463,7 +442,6 @@ module.exports = {
     console.log(`Time taken: ${(endTime - startTime).toFixed(2)}ms`);
     console.log("✓ Solutions generated successfully\n");
 
-    // Test 3: Place Queen
     console.log("--- Test 3: Place Queen ---");
     const testBoard = await generateBoard(4);
     const result = await placeQueen([], testBoard, 0, 0);
@@ -473,14 +451,12 @@ module.exports = {
     console.log(`Hints: ${result.hints.length}`);
     console.log("✓ Queen placement working\n");
 
-    // Test 4: Check Solution
     console.log("--- Test 4: Check Solution ---");
     const solutions4 = await getSolutions(4);
     const isValid = await checkSolutionWithBoard(solutions4[0]);
     console.log(`Valid solution check: ${isValid}`);
     console.log("✓ Solution validation working\n");
 
-    // Test 5: Performance comparison
     console.log("--- Test 5: Performance Comparison ---");
     const sizes = [4, 5, 6, 7, 8];
     for (const size of sizes) {

@@ -35,6 +35,17 @@ const Login = () => {
       const result = await login(trimmed);
       if (result.success) {
         showNotification(`Welcome, ${result.user.username}!`, "success");
+        try {
+          if (document.documentElement.requestFullscreen) {
+            await document.documentElement.requestFullscreen();
+          } else if (document.documentElement.webkitRequestFullscreen) {
+            await document.documentElement.webkitRequestFullscreen();
+          } else if (document.documentElement.msRequestFullscreen) {
+            await document.documentElement.msRequestFullscreen();
+          }
+        } catch (fullscreenErr) {
+          console.log("Fullscreen request failed:", fullscreenErr);
+        }
         navigate("/");
       } else {
         showNotification(result.message || "Login failed", "error");
@@ -106,7 +117,7 @@ const Login = () => {
             </label>
 
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+              <div className="absolute left-0 flex items-center pointer-events-none top-3 pl-80">
                 <User
                   className="w-5 h-5 opacity-50"
                   style={{ color: theme.textSecondary }}
