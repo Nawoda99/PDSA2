@@ -1,0 +1,764 @@
+
+
+.snake-game-wrapper {
+    font-family: 'Nunito', Arial, sans-serif;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    background: #f0f2f5; 
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999; 
+    transition: all 0.3s ease;
+}
+
+body.theme-dark .snake-game-wrapper {
+    background: linear-gradient(135deg, #1a1a1a, #2b2b2b) !important; 
+    color: #f0f0f0 !important;
+}
+
+body.theme-dark .glass-panel {
+    background: rgba(40, 40, 40, 0.6) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.screen {
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+}
+
+/* Animated Liquid Background */
+.screen::before,
+.screen::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  z-index: -1;
+  opacity: 0.7;
+  animation-duration: 20s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+  animation-direction: alternate;
+}
+.screen::before {
+  width: 400px;
+  height: 400px;
+  background: linear-gradient(135deg, #4a90e2, #8dc26f);
+  animation-name: blob-float;
+}
+.screen::after {
+  width: 300px;
+  height: 300px;
+  background: linear-gradient(135deg, #ff6b6b, #f093fb);
+  animation-name: blob-float-2;
+}
+
+@keyframes blob-float {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(calc(100vw - 400px), calc(100vh - 400px));
+  }
+}
+@keyframes blob-float-2 {
+  0% {
+    transform: translate(calc(100vw - 300px), 0);
+  }
+  100% {
+    transform: translate(0, calc(100vh - 300px));
+  }
+}
+
+/* Glass Panel Base Class (LIGHT MODE) */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Button & Input Styles (LIGHT MODE) */
+.btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 1.1em;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+.btn-primary {
+  background: #ff6b6b;
+  color: white;
+}
+.btn-primary:hover {
+  background-color: #ff4747;
+}
+.btn-secondary {
+  background: #4a90e2;
+  color: white;
+}
+.btn-secondary:hover {
+  background: #357abd;
+}
+
+/* Light Glass Choice Buttons */
+.choice-button {
+  flex-grow: 1;
+  padding: 15px 10px;
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #111;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(5px);
+}
+.choice-button:hover {
+  background: rgba(255, 255, 255, 0.7);
+  transform: translateY(-2px);
+}
+.choice-button:disabled {
+  background: rgba(220, 220, 220, 0.5);
+  cursor: not-allowed;
+}
+
+.menu-screen .icon-button.top-left {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+}
+/* Icon Buttons (LIGHT MODE) */
+.icon-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  padding: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.icon-button svg {
+  fill: #333;
+}
+.icon-button:hover {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Inputs & Selects (LIGHT MODE) */
+input[type="text"],
+select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  font-size: 1em;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  margin-bottom: 15px;
+  background-color: rgba(255, 255, 255, 0.7);
+  color: #333;
+  transition: all 0.3s ease;
+}
+select {
+  margin-bottom: 20px;
+}
+select {
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23333333%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-13%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2013l128%20128c3.6%203.6%207.8%205.4%2013%205.4s9.4-1.8%2013-5.4l128-128c3.6-3.6%205.4-7.8%205.4-13%200-4.9-1.8-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px top 50%;
+  background-size: 10px auto;
+}
+
+/* Menu Screen (LIGHT MODE) */
+.menu-screen {
+  display: grid;
+  place-items: center;
+}
+.menu-screen .icon-button.top-left {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+}
+.menu-screen .icon-button.top-right {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+.menu-screen .icon-button svg {
+  fill: #333;
+}
+
+.game-title {
+  font-family: "Fredoka One", cursive;
+  font-size: 3.5em;
+  font-weight: 400;
+  color: white;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
+  margin: 0 0 10px 0;
+}
+
+.menu-box {
+  padding: 30px 40px;
+  text-align: center;
+  width: 90%;
+  max-width: 400px;
+}
+.menu-box p {
+  font-size: 1.1em;
+  color: #222;
+  margin-top: 0;
+  font-weight: 700;
+}
+
+/* Game Screen (LIGHT MODE) */
+.game-container {
+  display: none;
+  flex-direction: column;
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  flex-shrink: 0;
+  z-index: 10;
+  border-radius: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+.game-header .icon-button {
+  background: transparent;
+  border: none;
+}
+.header-icon-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.game-header-title {
+  font-family: "Fredoka One", cursive;
+  font-size: 1.5em;
+  color: #222;
+  margin: 0;
+  font-weight: 400;
+}
+
+.game-body {
+  display: flex;
+  flex-grow: 1;
+  height: calc(100% - 65px);
+}
+
+.controls-panel {
+  flex: 0 0 340px;
+  padding: 10px 20px 0px 20px;
+  overflow-y: auto;
+  border-radius: 0;
+}
+.board-panel {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.player-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+}
+.player-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4a90e2, #ff6b6b);
+  border: 2px solid #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.avatar-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.player-name {
+  font-family: "Fredoka One", cursive;
+  font-size: 1.6em;
+  font-weight: 400;
+  color: #111;
+  margin: 0;
+  word-break: break-all;
+}
+
+/* Inner Cards (LIGHT MODE) */
+.setup-group,
+.quiz-group {
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  margin: 20px 0;
+}
+.setup-group h3 {
+  margin-top: 0;
+  color: #333;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 5px;
+  display: inline-block;
+}
+#gameStatus {
+  font-family: "Fredoka One", cursive;
+  font-weight: 400;
+  font-size: 1.4em;
+  margin-top: 0;
+  color: #0052d4;
+}
+.choices-container {
+  display: flex;
+  justify-content: space-between;
+  margin: 20px 0;
+  gap: 10px;
+}
+
+#resultMessage {
+  font-size: 1.25em;
+  font-weight: 700;
+  text-align: center;
+  margin-top: 15px;
+  padding: 15px;
+  border-radius: 8px;
+}
+#resultMessage.correct {
+  color: #155724;
+  background-color: rgba(212, 237, 218, 0.8);
+}
+#resultMessage.wrong {
+  color: #721c24;
+  background-color: rgba(248, 215, 218, 0.8);
+}
+
+/* MODERN "LIQUID GLASS" Board Styles (LIGHT MODE) */
+#board-container {
+  position: relative;
+  width: 85vh;
+  height: 85vh;
+  max-width: 100%;
+  max-height: 100%;
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 16px;
+  box-sizing: border-box;
+}
+#board-grid {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  border-radius: 15px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Base style for ALL cells */
+.grid-cell {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  transition: background-color 0.3s ease;
+  padding: 4px;
+  font-size: 0.8em;
+  font-weight: 700;
+  color: #222;
+  text-shadow: none;
+}
+
+/* Light mode cell colors (TRANSPARENT) */
+.cell-odd {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+.cell-even {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+#board-graphics {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* "MODERN BROWN" LADDER STYLES (Applies to BOTH modes) */
+.ladder-rail {
+  stroke: #8b4513;
+  stroke-width: 8;
+  stroke-linecap: round;
+  filter: drop-shadow(2px 2px 2px rgba(0, 0, 0, 0.25));
+  opacity: 0.9;
+}
+.ladder-rung {
+  stroke: #65340b;
+  stroke-width: 5;
+  stroke-linecap: round;
+  opacity: 0.9;
+}
+
+/* "GLASS" SNAKE STYLES (LIGHT) */
+.snake-group {
+  opacity: 0.85;
+  filter: drop-shadow(3px 3px 3px rgba(0, 0, 0, 0.2));
+}
+.snake-body-fill,
+.snake-head-fill {
+  stroke: rgba(0, 0, 0, 0.3);
+  stroke-width: 1;
+}
+.snake-eye-fill {
+  fill: #ffffff;
+  stroke: #000000;
+  stroke-width: 1;
+}
+.snake-tongue-line {
+  fill: none;
+  stroke: #ff4747;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+/* Theme Toggle Icon CSS */
+.theme-toggle-button .icon-sun {
+  display: none;
+}
+.theme-toggle-button .icon-moon {
+  display: block;
+}
+
+/* Responsive (Mobile) */
+@media (max-width: 800px) {
+  .game-body {
+    flex-direction: column;
+    height: calc(100% - 60px);
+  }
+  .controls-panel {
+    flex: 0 0 auto;
+    width: 100%;
+    max-height: 45%;
+    box-sizing: border-box;
+    border-radius: 0;
+  }
+  .board-panel {
+    flex-grow: 1;
+    padding: 15px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  #board-container {
+    width: 90vw;
+    height: 90vw;
+  }
+  .game-header-title {
+    font-size: 1.2em;
+  }
+  .player-name {
+    font-size: 1.4em;
+  }
+}
+
+/* DARK MODE OVERRIDES */
+
+body.theme-dark {
+  color: #f0f0f0;
+  background: linear-gradient(135deg, #1a1a1a, #2b2b2b);
+}
+
+/* Dark Glass Panels */
+body.theme-dark .glass-panel {
+  background: rgba(40, 40, 40, 0.4);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Dark Buttons & Inputs */
+body.theme-dark .choice-button {
+  color: #f0f0f0;
+  background: rgba(60, 60, 60, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+body.theme-dark .choice-button:hover {
+  background: rgba(80, 80, 80, 0.7);
+}
+body.theme-dark .choice-button:disabled {
+  background: rgba(50, 50, 50, 0.5);
+  color: #888;
+}
+
+body.theme-dark .icon-button {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+body.theme-dark .icon-button svg {
+  fill: #f0f0f0;
+}
+body.theme-dark .icon-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+body.theme-dark input[type="text"],
+body.theme-dark select {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(30, 30, 30, 0.7);
+  color: #f0f0f0;
+}
+body.theme-dark select {
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23f0f0f0%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-13%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2013l128%20128c3.6%203.6%207.8%205.4%2013%205.4s9.4-1.8%2013-5.4l128-128c3.6-3.6%205.4-7.8%205.4-13%200-4.9-1.8-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E");
+}
+
+/* Dark Menu/Game Screen */
+body.theme-dark .menu-screen .icon-button svg {
+  fill: #f0f0f0;
+}
+body.theme-dark .menu-box p {
+  color: #e0e0e0;
+}
+
+body.theme-dark .game-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+body.theme-dark .game-header .icon-button {
+  background: transparent;
+  border: none;
+}
+body.theme-dark .game-header-title {
+  color: #f0f0f0;
+}
+
+body.theme-dark .controls-panel {
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.theme-dark .player-info {
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+body.theme-dark .player-name {
+  color: #ffffff;
+}
+
+body.theme-dark .setup-group,
+body.theme-dark .quiz-group {
+  background: rgba(20, 20, 20, 0.5);
+}
+body.theme-dark hr {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+body.theme-dark .setup-group h3 {
+  color: #e0e0e0;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  transition: color 0.3s ease;
+}
+body.theme-dark #gameStatus {
+  color: #58a6ff;
+}
+
+/* Dark Result Messages */
+body.theme-dark #resultMessage.correct {
+  color: #d4edda;
+  background-color: rgba(21, 87, 36, 0.8);
+}
+body.theme-dark #resultMessage.wrong {
+  color: #f8d7da;
+  background-color: rgba(114, 28, 36, 0.8);
+}
+
+/* DARK MODE "LIQUID GLASS" BOARD  */
+
+body.theme-dark #board-container {
+  background: rgba(40, 40, 40, 0.4);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+body.theme-dark .grid-cell {
+  color: #f0f0f0;
+  text-shadow: none;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Dark mode cell colors (TRANSPARENT) */
+body.theme-dark .cell-odd {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+body.theme-dark .cell-even {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+/*  "GLASS" SNAKE STYLES (DARK) */
+body.theme-dark .snake-group {
+  opacity: 0.85;
+  filter: drop-shadow(3px 3px 3px rgba(0, 0, 0, 0.2));
+}
+body.theme-dark .snake-body-fill,
+body.theme-dark .snake-head-fill {
+  stroke: rgba(255, 255, 255, 0.2);
+  stroke-width: 1;
+}
+body.theme-dark .snake-eye-fill {
+  fill: #ffffff;
+  stroke: #000000;
+  stroke-width: 1;
+}
+body.theme-dark .snake-tongue-line {
+  fill: none;
+  stroke: #ff4747;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+/* Dark Theme Toggle Icon */
+body.theme-dark .theme-toggle-button .icon-sun {
+  display: block;
+}
+body.theme-dark .theme-toggle-button .icon-moon {
+  display: none;
+}
+
+/* Dark Mobile Responsive */
+@media (max-width: 800px) {
+  body.theme-dark .controls-panel {
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Shake Animation Keyframes */
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-10px);
+  }
+  40%,
+  80% {
+    transform: translateX(10px);
+  }
+}
+
+/* Class to trigger shake and show red border */
+.input-error {
+  border: 2px solid #ff4d4d !important;
+  animation: shake 0.4s ease-in-out;
+  box-shadow: 0 0 8px rgba(255, 77, 77, 0.4);
+}
+
+.game-timer {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.6);
+  color: #333;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 8px 15px;
+  border-radius: 25px;
+  font-family: "Fredoka One", cursive;
+  font-size: 1.2em;
+  height: 40px;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+  margin: 0;
+}
+
+.timer-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 8px;
+  fill: #333;
+  transition: fill 0.3s ease;
+}
+
+/* Icon Buttons (Theme & Sound) */
+.icon-button {
+  font-size: 1.5em;
+  background-color: rgba(0, 0, 0, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  color: white;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: static;
+}
+
+.icon-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.icon-button svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Dark Mode Overrides */
+body.theme-dark .game-timer {
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+body.theme-dark .timer-icon {
+  fill: #fff;
+}

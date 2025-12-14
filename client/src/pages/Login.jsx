@@ -106,7 +106,7 @@ const Login = () => {
             </label>
 
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+              <div className="absolute top-3  left-0 flex items-center pl-80 pointer-events-none">
                 <User
                   className="w-5 h-5 opacity-50"
                   style={{ color: theme.textSecondary }}

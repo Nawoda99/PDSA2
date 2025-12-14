@@ -12,7 +12,6 @@ import {
   Activity,
   ChevronRight,
 } from "lucide-react";
-
 const Dashboard = () => {
   const { theme } = useTheme();
   const { user } = useAuth();
@@ -23,6 +22,7 @@ const Dashboard = () => {
     queens: { played: 0, solved: 0, avgTime: 0, totalSolutions: 0 },
     traffic: { played: 0, correct: 0, avgTime: 0, accuracy: 0 },
     tsp: { played: 0, avgCost: 0, bestCost: 0, totalCities: 0 },
+    snake: { played: 0, won: 0, avgRolls: 0, bestRolls: 0 }, 
     overall: { totalGames: 0, totalCorrect: 0, totalTime: 0, successRate: 0 },
   });
 
@@ -33,12 +33,14 @@ const Dashboard = () => {
   const fetchDashboardStats = async () => {
     setLoading(true);
     try {
-      const [hanoiRes, queensRes, trafficRes, tspRes] =
+
+      const [hanoiRes, queensRes, trafficRes, tspRes, snakeRes] =
         await Promise.allSettled([
           api.get(`/hanoi/stats/${user.username}`),
           api.get(`/eightQueens/player/${user.id}`),
           api.get(`/traffic/history/${user.id}`),
           api.get(`/tsp/stats/${user.username}`),
+          api.get(`/snake-game/${user.username}`), 
         ]);
 
       let hanoiData = { played: 0, solved: 0, avgMoves: 0, bestTime: 0 };
@@ -119,16 +121,30 @@ const Dashboard = () => {
         }
       }
 
+      let snakeData = { played: 0, won: 0, avgRolls: 0, bestRolls: 0 };
+      if (snakeRes.status === "fulfilled" && snakeRes.value.data.success) {
+        const games = Array.isArray(snakeRes.value.data.data)
+          ? snakeRes.value.data.data
+          : [];
+        snakeData.played = games.length;
+        snakeData.won = games.filter((g) => g.isCorrect).length; 
+        
+      }
+
       const totalGames =
         hanoiData.played +
         queensData.played +
         trafficData.played +
-        tspData.played;
+        tspData.played +
+        snakeData.played; 
+
       const totalCorrect =
         hanoiData.solved +
         queensData.solved +
         trafficData.correct +
-        tspData.played;
+        tspData.played + 
+        snakeData.won; 
+
       const successRate =
         totalGames > 0 ? (totalCorrect / totalGames) * 100 : 0;
 
@@ -137,6 +153,7 @@ const Dashboard = () => {
         queens: queensData,
         traffic: trafficData,
         tsp: tspData,
+        snake: snakeData, // Add to state
         overall: {
           totalGames,
           totalCorrect,
@@ -241,6 +258,28 @@ const Dashboard = () => {
         },
       ],
     },
+
+    {
+      id: "snake",
+      title: "Snakes & Ladders",
+      icon: "🐍", 
+      color: "#27ae60", 
+      path: "/snake-ladder", 
+      stats: [
+        { label: "Games Played", value: stats.snake.played, icon: Activity },
+        {
+          label: "Games Won",
+          value: stats.snake.won,
+          icon: Trophy,
+        },
+        {
+           label: "Win Rate",
+           value: stats.snake.played > 0 ? `${((stats.snake.won / stats.snake.played) * 100).toFixed(0)}%` : "0%",
+           icon: TrendingUp
+        }
+      ],
+    },
+  
   ];
 
   const overallStats = [
@@ -345,7 +384,7 @@ const Dashboard = () => {
       >
         Game Statistics
       </h2>
-      <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2 lg:grid-cols-3"> 
         {gameCards.map((game) => (
           <div
             key={game.id}
@@ -417,7 +456,7 @@ const Dashboard = () => {
       >
         Quick Actions
       </h2>
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-5"> 
         {gameCards.map((game) => (
           <button
             key={game.id}
@@ -531,6 +570,21 @@ const Dashboard = () => {
                   </p>
                   <p className="text-xs" style={{ color: theme.textSecondary }}>
                     Completed 5+ TSP routes
+                  </p>
+                </div>
+              )}
+
+              {stats.snake.played >= 5 && (
+                <div
+                  className="p-4 text-center rounded-lg"
+                  style={{ background: `${theme.primary}10` }}
+                >
+                  <div className="mb-2 text-4xl">🎲</div>
+                  <p className="font-bold" style={{ color: theme.textPrimary }}>
+                    Luck Master
+                  </p>
+                  <p className="text-xs" style={{ color: theme.textSecondary }}>
+                    Played 5+ Snake games
                   </p>
                 </div>
               )}
