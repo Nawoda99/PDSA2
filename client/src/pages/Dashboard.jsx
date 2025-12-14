@@ -40,7 +40,7 @@ const Dashboard = () => {
           api.get(`/eightQueens/player/${user.id}`),
           api.get(`/traffic/history/${user.id}`),
           api.get(`/tsp/stats/${user.username}`),
-          api.get(`/snake-game/stats/${user.username}`), 
+          api.get(`/snake-game/${user.username}`), 
         ]);
 
       let hanoiData = { played: 0, solved: 0, avgMoves: 0, bestTime: 0 };
