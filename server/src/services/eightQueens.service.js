@@ -17,6 +17,22 @@ async function generateBoard(boardSize = 8) {
     throw new Error(`Failed to generate board: ${error.message}`);
   }
 }
+function boardsEqual(a, b) {
+  const n = a.length;
+  if (!Array.isArray(a) || !Array.isArray(b) || n !== b.length) return false;
+  for (let i = 0; i < n; i++) {
+    if (
+      !Array.isArray(a[i]) ||
+      !Array.isArray(b[i]) ||
+      a[i].length !== b[i].length
+    )
+      return false;
+    for (let j = 0; j < n; j++) {
+      if (a[i][j] !== b[i][j]) return false;
+    }
+  }
+  return true;
+}
 
 async function getSolutionsSequential(boardSize = 8) {
   const startTime = performance.now();
@@ -376,17 +392,22 @@ async function saveSolution(board, playerId, playerName, timeSpent = 0) {
 
     const boardSize = board.length;
 
-    const existingSolution = await nQueensModel.findOne({
-      where: {
-        solution: JSON.stringify(board),
-      },
+    const existingAll = await nQueensModel.findAll({
+      attributes: ["id", "solution", "player"],
+      order: [["createdAt", "DESC"]],
     });
+    const sameSizeSolutions = existingAll.filter(
+      (s) => Array.isArray(s.solution) && s.solution.length === boardSize
+    );
+    const duplicate = sameSizeSolutions.find((s) =>
+      boardsEqual(s.solution, board)
+    );
 
-    if (existingSolution) {
+    if (duplicate) {
       return {
         success: false,
-        message: `This solution has already been found by ${existingSolution.player}. Try a different solution!`,
-        existingSolution,
+        message: `This solution has already been recognized (by ${duplicate.player}). Try a different solution until all are found.`,
+        existingSolution: { id: duplicate.id, player: duplicate.player },
         status: "duplicate",
       };
     }
@@ -394,13 +415,7 @@ async function saveSolution(board, playerId, playerName, timeSpent = 0) {
     const allSolutions = await getSolutions(boardSize);
     const totalPossibleSolutions = allSolutions.length;
 
-    const savedSolutionsCount = await nQueensModel.count({
-      where: {
-        solution: {
-          [require("sequelize").Op.ne]: null,
-        },
-      },
-    });
+    const savedSolutionsCount = sameSizeSolutions.length;
 
     if (savedSolutionsCount >= totalPossibleSolutions) {
       console.log(
@@ -424,7 +439,7 @@ async function saveSolution(board, playerId, playerName, timeSpent = 0) {
       timeSpent: timeSpent,
     });
 
-    const updatedCount = await nQueensModel.count();
+    const updatedFound = savedSolutionsCount + 1;
 
     return {
       success: true,
@@ -432,9 +447,9 @@ async function saveSolution(board, playerId, playerName, timeSpent = 0) {
       solution: newSolution,
       status: "success",
       progress: {
-        found: updatedCount,
+        found: updatedFound,
         total: totalPossibleSolutions,
-        remaining: totalPossibleSolutions - updatedCount,
+        remaining: totalPossibleSolutions - updatedFound,
       },
     };
   } catch (error) {

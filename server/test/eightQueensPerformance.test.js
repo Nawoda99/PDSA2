@@ -4,7 +4,12 @@ const {
 } = require("../src/services/eightQueens.service");
 const { Worker } = require("worker_threads");
 const path = require("path");
+jest.setTimeout(60000);
 
+afterAll(async () => {
+  const sequelize = require("../src/config/DB");
+  await sequelize.close();
+});
 describe("Eight Queens Performance: Sequential vs Threaded", () => {
   describe("Sequential Solution Generation", () => {
     test("should find all 92 solutions sequentially", async () => {

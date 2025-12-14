@@ -24,7 +24,7 @@ const User = sequelize.define(
   },
   {
     tableName: "users",
-    timestamps: true, // adds createdAt and updatedAt
+    timestamps: true,
     indexes: [
       {
         unique: true,

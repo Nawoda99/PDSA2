@@ -11,7 +11,7 @@ const EightQueens = sequelize.define(
       autoIncrement: true,
     },
     solution: {
-      type: DataTypes.JSON, // stores 8x8 board as JSON
+      type: DataTypes.JSON,
       allowNull: false,
     },
     playerId: {
@@ -31,7 +31,7 @@ const EightQueens = sequelize.define(
       defaultValue: 0,
     },
     timeSpent: {
-      type: DataTypes.INTEGER, // in seconds
+      type: DataTypes.INTEGER,
       defaultValue: 0,
     },
   },
@@ -46,7 +46,6 @@ const EightQueens = sequelize.define(
   }
 );
 
-// Define association
 EightQueens.belongsTo(User, {
   foreignKey: "playerId",
   as: "userDetails",
