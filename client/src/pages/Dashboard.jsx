@@ -22,7 +22,7 @@ const Dashboard = () => {
     queens: { played: 0, solved: 0, avgTime: 0, totalSolutions: 0 },
     traffic: { played: 0, correct: 0, avgTime: 0, accuracy: 0 },
     tsp: { played: 0, avgCost: 0, bestCost: 0, totalCities: 0 },
-    snake: { played: 0, won: 0, avgRolls: 0, bestRolls: 0 }, 
+    snake: { played: 0, won: 0, avgRolls: 0, bestRolls: 0 },
     overall: { totalGames: 0, totalCorrect: 0, totalTime: 0, successRate: 0 },
   });
 
@@ -33,14 +33,13 @@ const Dashboard = () => {
   const fetchDashboardStats = async () => {
     setLoading(true);
     try {
-
       const [hanoiRes, queensRes, trafficRes, tspRes, snakeRes] =
         await Promise.allSettled([
           api.get(`/hanoi/stats/${user.username}`),
           api.get(`/eightQueens/player/${user.id}`),
           api.get(`/traffic/history/${user.id}`),
           api.get(`/tsp/stats/${user.username}`),
-          api.get(`/snake-game/${user.username}`), 
+          api.get(`/snake-game/${user.username}`),
         ]);
 
       let hanoiData = { played: 0, solved: 0, avgMoves: 0, bestTime: 0 };
@@ -127,8 +126,7 @@ const Dashboard = () => {
           ? snakeRes.value.data.data
           : [];
         snakeData.played = games.length;
-        snakeData.won = games.filter((g) => g.isCorrect).length; 
-        
+        snakeData.won = games.filter((g) => g.isCorrect).length;
       }
 
       const totalGames =
@@ -136,14 +134,14 @@ const Dashboard = () => {
         queensData.played +
         trafficData.played +
         tspData.played +
-        snakeData.played; 
+        snakeData.played;
 
       const totalCorrect =
         hanoiData.solved +
         queensData.solved +
         trafficData.correct +
-        tspData.played + 
-        snakeData.won; 
+        tspData.played +
+        snakeData.won;
 
       const successRate =
         totalGames > 0 ? (totalCorrect / totalGames) * 100 : 0;
@@ -153,16 +151,13 @@ const Dashboard = () => {
         queens: queensData,
         traffic: trafficData,
         tsp: tspData,
-        snake: snakeData, // Add to state
+        snake: snakeData,
         overall: {
           totalGames,
           totalCorrect,
           successRate,
         },
       });
-      console.log(user.username);
-
-      console.log(tspData);
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
     } finally {
@@ -262,9 +257,9 @@ const Dashboard = () => {
     {
       id: "snake",
       title: "Snakes & Ladders",
-      icon: "🐍", 
-      color: "#27ae60", 
-      path: "/snake-ladder", 
+      icon: "🐍",
+      color: "#27ae60",
+      path: "/snake-ladder",
       stats: [
         { label: "Games Played", value: stats.snake.played, icon: Activity },
         {
@@ -273,13 +268,15 @@ const Dashboard = () => {
           icon: Trophy,
         },
         {
-           label: "Win Rate",
-           value: stats.snake.played > 0 ? `${((stats.snake.won / stats.snake.played) * 100).toFixed(0)}%` : "0%",
-           icon: TrendingUp
-        }
+          label: "Win Rate",
+          value:
+            stats.snake.played > 0
+              ? `${((stats.snake.won / stats.snake.played) * 100).toFixed(0)}%`
+              : "0%",
+          icon: TrendingUp,
+        },
       ],
     },
-  
   ];
 
   const overallStats = [
@@ -384,7 +381,7 @@ const Dashboard = () => {
       >
         Game Statistics
       </h2>
-      <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2 lg:grid-cols-3"> 
+      <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2 lg:grid-cols-3">
         {gameCards.map((game) => (
           <div
             key={game.id}
@@ -456,7 +453,7 @@ const Dashboard = () => {
       >
         Quick Actions
       </h2>
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-5"> 
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
         {gameCards.map((game) => (
           <button
             key={game.id}
