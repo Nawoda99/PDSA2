@@ -10,6 +10,7 @@ import { numberToLetter } from "../../utils/helper-Function";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
+  baseURL: "/api",
 });
 
 const ChessBoard = ({ bordsize }) => {

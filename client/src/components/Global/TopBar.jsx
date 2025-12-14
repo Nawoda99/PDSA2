@@ -13,6 +13,7 @@ import {
   TrafficCone,
   MenuIcon,
 } from "lucide-react";
+import { GiSnake } from "react-icons/gi";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../Providers/AuthProvider";
 
@@ -65,6 +66,7 @@ export const TopBar = ({ onToggleSidebar }) => {
       icon: TrafficCone,
     },
     { name: "Traveling Salesman", path: "/traveling-salesman", icon: MenuIcon },
+    { name: "Snakes & Ladders", path: "/snake-ladder", icon: GiSnake },
   ];
 
   const displayUser = useMemo(

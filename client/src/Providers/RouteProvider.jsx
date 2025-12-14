@@ -9,6 +9,7 @@ import EightQueens from "../pages/Eight-Queens/EightQueens";
 import TrafficSimulation from "../pages/TrafficSimulation/TrafficSimulation";
 import Dashboard from "../pages/Dashboard";
 import TravelingSalesman from "../pages/TravelingSalesman/TravelingSalesman";
+import SnakeGame from "../pages/SanakeAndLadder/snakeAndLadder"
 
 export default function RouteProvider() {
   return (
@@ -35,6 +36,7 @@ export default function RouteProvider() {
           <Route path="/eight-queens" element={<EightQueens />} />
           <Route path="/traffic-simulation" element={<TrafficSimulation />} />
           <Route path="/traveling-salesman" element={<TravelingSalesman />} />
+          <Route path="/snake-ladder" element={<SnakeGame/>} />
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />
