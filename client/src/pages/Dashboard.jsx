@@ -59,7 +59,6 @@ const Dashboard = () => {
             : 0;
       }
 
-      // Process Queens stats
       let queensData = { played: 0, solved: 0, avgTime: 0, totalSolutions: 0 };
       if (queensRes.status === "fulfilled" && queensRes.value.data.success) {
         const games = Array.isArray(queensRes.value.data.data)
@@ -75,7 +74,6 @@ const Dashboard = () => {
             : 0;
       }
 
-      // Process Traffic stats
       let trafficData = { played: 0, correct: 0, avgTime: 0, accuracy: 0 };
       if (trafficRes.status === "fulfilled" && trafficRes.value.data.success) {
         const games = Array.isArray(trafficRes.value.data.data)
@@ -92,26 +90,33 @@ const Dashboard = () => {
           games.length > 0 ? (trafficData.correct / games.length) * 100 : 0;
       }
 
-      // Process TSP stats
       let tspData = { played: 0, avgCost: 0, bestCost: 0, totalCities: 0 };
       if (tspRes.status === "fulfilled" && tspRes.value.data.success) {
-        const games = Array.isArray(tspRes.value.data.data)
-          ? tspRes.value.data.data
-          : [];
-        tspData.played = games.length;
-        tspData.avgCost =
-          games.length > 0
-            ? games.reduce((sum, g) => sum + (g.totalCost || 0), 0) /
-              games.length
-            : 0;
-        tspData.bestCost =
-          games.length > 0
-            ? Math.min(...games.map((g) => g.totalCost || Infinity))
-            : 0;
-        tspData.totalCities =
-          games.length > 0
-            ? games.reduce((sum, g) => sum + (g.citiesVisited || 0), 0)
-            : 0;
+        const data = tspRes.value.data.data;
+
+        if (data && typeof data === "object" && !Array.isArray(data)) {
+          tspData.played = data.totalGames || 0;
+          tspData.avgCost = Math.round(data.avgDistance || 0);
+          tspData.bestCost = data.bestDistance || 0;
+          tspData.totalCities = data.numberOfCities || 0;
+        } else if (Array.isArray(data)) {
+          tspData.played = data.length;
+          tspData.avgCost =
+            data.length > 0
+              ? Math.round(
+                  data.reduce((sum, g) => sum + (g.totalCost || 0), 0) /
+                    data.length
+                )
+              : 0;
+          tspData.bestCost =
+            data.length > 0
+              ? Math.min(...data.map((g) => g.totalCost || Infinity))
+              : 0;
+          tspData.totalCities =
+            data.length > 0
+              ? data.reduce((sum, g) => sum + (g.citiesVisited || 0), 0)
+              : 0;
+        }
       }
 
       const totalGames =
@@ -138,6 +143,9 @@ const Dashboard = () => {
           successRate,
         },
       });
+      console.log(user.username);
+
+      console.log(tspData);
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
     } finally {

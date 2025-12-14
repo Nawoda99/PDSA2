@@ -93,7 +93,6 @@ const getPlayerStats = async (req, res, next) => {
     }
 
     const stats = await travelingSalesmanService.getPlayerStats(playerName);
-
     if (!stats) {
       return res.json({
         success: false,

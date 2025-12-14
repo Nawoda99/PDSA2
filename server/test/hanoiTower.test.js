@@ -7,7 +7,10 @@ describe("Hanoi Tower Service Tests", () => {
       const moves = hanoiService.hanoiRecursive(5);
       expect(moves.length).toBe(31); // 2^5 - 1
       expect(moves[0]).toMatchObject({ disk: 1, from: "A" });
-      expect(moves[moves.length - 1]).toMatchObject({ disk: expect.any(Number), to: "D" });
+      expect(moves[moves.length - 1]).toMatchObject({
+        disk: expect.any(Number),
+        to: "D",
+      });
     });
 
     test("should have all disks on destination", () => {
@@ -86,9 +89,7 @@ describe("Hanoi Tower Service Tests", () => {
     });
 
     test("should reject incomplete solution", () => {
-      const incompleteMoves = [
-        { disk: 1, from: "A", to: "D" },
-      ];
+      const incompleteMoves = [{ disk: 1, from: "A", to: "D" }];
       const validation = hanoiService.validateSolution(incompleteMoves, 5, 3);
       expect(validation.valid).toBe(false);
     });
@@ -117,7 +118,7 @@ describe("Hanoi Tower Service Tests", () => {
   describe("Performance Tests", () => {
     test("all algorithms should complete in reasonable time", () => {
       const disks = 10;
-      
+
       const t0 = performance.now();
       hanoiService.hanoiRecursive(disks);
       const recursiveTime = performance.now() - t0;
