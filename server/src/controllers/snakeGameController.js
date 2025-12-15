@@ -17,8 +17,6 @@ function getRandomInt(min, max) {
 
 const startGame = async (req, res) => {
   try {
-    console.log("Starting New Game");
-
     // Get 'n' from Query Params (Default 10)
     const n = parseInt(req.query.n) || 10;
     const boardSize = n * n;
@@ -43,10 +41,6 @@ const startGame = async (req, res) => {
 
       attempts++;
     } while (bfsAnswer === -1 && attempts < 100);
-
-    console.log(
-      `DEBUG: Generated Solvable Board in ${attempts} attempts. Answer: ${bfsAnswer}`
-    );
 
     // Game Round Save
     const savedGameRound = await SnakeGameRound.create({
@@ -115,13 +109,8 @@ const startGame = async (req, res) => {
 // submit guess
 const submitGuess = async (req, res) => {
   try {
-    console.log("Submitting Guess");
-
     // Request Body Data)
     const { gameRoundId, userName, guessAnswer } = req.body;
-
-    console.log(`DEBUG: Request Game ID: ${gameRoundId}`);
-    console.log(`DEBUG: User Answer: ${guessAnswer}`);
 
     // Database GameRound
     const gameRound = await SnakeGameRound.findByPk(gameRoundId);
@@ -135,10 +124,8 @@ const submitGuess = async (req, res) => {
     }
 
     const actualAnswer = gameRound.correctAnswer;
-    console.log(`DEBUG: Database Correct Answer: ${actualAnswer}`);
 
     const isCorrect = actualAnswer === parseInt(guessAnswer);
-    console.log(`DEBUG: Is Correct? ${isCorrect}`);
 
     // User Guess Database Save
     await SnakeUserGuess.create({
@@ -176,8 +163,16 @@ const getPlayerStats = async (req, res) => {
     const games = await SnakeUserGuess.findAll({
       where: { userName: playerName },
     });
+    const performance = await SnakeAlgoPerformance.findAll({
+      include: {
+        model: SnakeGameRound,
+        where: { id: games.map((g) => g.roundId) },
+      },
+    });
 
-    return res.status(200).json({ success: true, data: games });
+    return res
+      .status(200)
+      .json({ success: true, data: { games, performance } });
   } catch (error) {
     console.error("getPlayerStats error:", error);
     res.status(500).json({ success: false, message: "Internal Server Error" });

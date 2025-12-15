@@ -116,7 +116,7 @@ async function getSolutionsThreaded(boardSize = 8) {
 
     for (let col = 0; col < boardSize; col++) {
       const worker = new Worker(
-        path.join(__dirname, "../utils/Functions/Eight-Queens/queensWorker.js"),
+        path.join(__dirname, "../utils/Functions/Eight-Queens/eightQueens.js"),
         {
           workerData: { boardSize, startCol: col },
         }
@@ -175,9 +175,47 @@ async function getSolutionsThreaded(boardSize = 8) {
   });
 }
 
-async function getSolutions(boardSize = 8) {
-  const result = await getSolutionsSequential(boardSize);
-  return result.solutions;
+// Cache to store solutions and avoid repeated calculations/saves
+let solutionsCache = {
+  boardSize: null,
+  solutions: null,
+  timestamp: null,
+};
+
+async function getSolutions(boardSize = 8, saveMetrics = true) {
+  const now = Date.now();
+  const cacheValidMs = 5000; // Cache valid for 5 seconds
+
+  // Return cached solutions if available and recent
+  if (
+    solutionsCache.boardSize === boardSize &&
+    solutionsCache.solutions &&
+    solutionsCache.timestamp &&
+    now - solutionsCache.timestamp < cacheValidMs
+  ) {
+    return solutionsCache.solutions;
+  }
+
+  // Run sequential algorithm
+  const sequentialResult = await getSolutionsSequential(boardSize);
+
+  // Also run threaded algorithm to save its performance metrics (only once)
+  if (boardSize >= 4 && saveMetrics) {
+    try {
+      await getSolutionsThreaded(boardSize);
+    } catch (error) {
+      console.error("Threaded execution failed:", error.message);
+    }
+  }
+
+  // Cache the results
+  solutionsCache = {
+    boardSize,
+    solutions: sequentialResult.solutions,
+    timestamp: now,
+  };
+
+  return sequentialResult.solutions;
 }
 
 async function compareAlgorithms(boardSize = 8) {
@@ -187,24 +225,12 @@ async function compareAlgorithms(boardSize = 8) {
     );
 
     const sequentialResult = await getSolutionsSequential(boardSize);
-    console.log(
-      `Sequential: ${
-        sequentialResult.solutions.length
-      } solutions in ${sequentialResult.executionTime.toFixed(2)}ms`
-    );
-
     let threadedResult = null;
     if (boardSize >= 4) {
       try {
         threadedResult = await getSolutionsThreaded(boardSize);
-        console.log(
-          `Threaded: ${
-            threadedResult.solutions.length
-          } solutions in ${threadedResult.executionTime.toFixed(2)}ms`
-        );
       } catch (error) {
         console.error("Threaded execution failed:", error.message);
-        console.log("Falling back to sequential results only");
       }
     }
 
@@ -418,9 +444,6 @@ async function saveSolution(board, playerId, playerName, timeSpent = 0) {
     const savedSolutionsCount = sameSizeSolutions.length;
 
     if (savedSolutionsCount >= totalPossibleSolutions) {
-      console.log(
-        `All ${totalPossibleSolutions} solutions found! Resetting database...`
-      );
       await nQueensModel.destroy({ where: {} });
     }
 
@@ -475,12 +498,17 @@ async function getPlayerSolutions(playerId) {
       order: [["createdAt", "DESC"]],
     });
 
-    return solutions;
+    // Get all performance data (it's global, not per player)
+    const performance = await QueensPerformance.findAll({
+      order: [["createdAt", "DESC"]],
+      limit: 50,
+    });
+
+    return { solutions, performance };
   } catch (error) {
     throw new Error(`Failed to retrieve player solutions: ${error.message}`);
   }
 }
-
 async function getLeaderboard() {
   try {
     const { Sequelize } = require("sequelize");

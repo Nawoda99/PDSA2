@@ -271,6 +271,9 @@ async function getPlayerStats(playerName) {
       bestAlgorithm: bestSession.bestAlgorithm,
       avgDistance: parseFloat(avgDistance.toFixed(2)),
       lastPlayed: sessions[sessions.length - 1].createdAt,
+      primMSTTimeMs: bestSession.primMSTTimeMs,
+      dijkstraSPTTimeMs: bestSession.dijkstraSPTTimeMs,
+      greedyTSTimeMs: bestSession.greedyTSTimeMs,
     };
   } catch (error) {
     throw new Error(`Failed to get player stats: ${error.message}`);

@@ -11,7 +11,11 @@ import {
   Award,
   Activity,
   ChevronRight,
+  Zap,
+  Cpu,
+  Timer,
 } from "lucide-react";
+
 const Dashboard = () => {
   const { theme } = useTheme();
   const { user } = useAuth();
@@ -26,8 +30,18 @@ const Dashboard = () => {
     overall: { totalGames: 0, totalCorrect: 0, totalTime: 0, successRate: 0 },
   });
 
+  // New state for algorithm performance
+  const [algoPerformance, setAlgoPerformance] = useState({
+    queens: { sequential: null, threaded: null },
+    hanoi: { recursive: null, iterative: null },
+    traffic: { fordFulkerson: null, edmondsKarp: null },
+    tsp: { primMST: null, dijkstraSPT: null, greedyTSP: null },
+    snake: { bfs: null, dijkstra: null },
+  });
+
   useEffect(() => {
     fetchDashboardStats();
+    fetchAlgorithmPerformance();
   }, []);
 
   const fetchDashboardStats = async () => {
@@ -62,8 +76,9 @@ const Dashboard = () => {
 
       let queensData = { played: 0, solved: 0, avgTime: 0, totalSolutions: 0 };
       if (queensRes.status === "fulfilled" && queensRes.value.data.success) {
-        const games = Array.isArray(queensRes.value.data.data)
-          ? queensRes.value.data.data
+        // Fix: access the solutions array directly
+        const games = Array.isArray(queensRes.value.data.data?.solutions)
+          ? queensRes.value.data.data.solutions
           : [];
         queensData.played = games.length;
         queensData.solved = games.length;
@@ -93,7 +108,7 @@ const Dashboard = () => {
 
       let tspData = { played: 0, avgCost: 0, bestCost: 0, totalCities: 0 };
       if (tspRes.status === "fulfilled" && tspRes.value.data.success) {
-        const data = tspRes.value.data.data;
+        const data = tspRes.value.data.data?.data || tspRes.value.data.data;
 
         if (data && typeof data === "object" && !Array.isArray(data)) {
           tspData.played = data.totalGames || 0;
@@ -122,8 +137,8 @@ const Dashboard = () => {
 
       let snakeData = { played: 0, won: 0, avgRolls: 0, bestRolls: 0 };
       if (snakeRes.status === "fulfilled" && snakeRes.value.data.success) {
-        const games = Array.isArray(snakeRes.value.data.data)
-          ? snakeRes.value.data.data
+        const games = Array.isArray(snakeRes.value.data.data.games)
+          ? snakeRes.value.data.data.games
           : [];
         snakeData.played = games.length;
         snakeData.won = games.filter((g) => g.isCorrect).length;
@@ -162,6 +177,171 @@ const Dashboard = () => {
       console.error("Error fetching dashboard stats:", error);
     } finally {
       setLoading(false);
+    }
+  };
+  const fetchAlgorithmPerformance = async () => {
+    try {
+      const [queensRes, hanoiRes, trafficRes, tspRes, snakeRes] =
+        await Promise.allSettled([
+          api.get("/eightQueens/performance"),
+          api.get(`/hanoi/stats/${user.username}`),
+          api.get(`/traffic/history/${user.id}`),
+          api.get(`/tsp/stats/${user.username}`),
+          api.get(`/snake-game/${user.username}`),
+        ]);
+      let queensPerf = { sequential: null, threaded: null };
+      if (queensRes.status === "fulfilled" && queensRes.value.data.success) {
+        const data = queensRes.value.data.data || [];
+        const sequential = data.filter((d) => d.algorithmType === "sequential");
+        const threaded = data.filter((d) => d.algorithmType === "threaded");
+
+        if (sequential.length > 0) {
+          queensPerf.sequential = {
+            avgTime: (
+              sequential.reduce((sum, d) => sum + d.executionTime, 0) /
+              sequential.length
+            ).toFixed(2),
+            runs: sequential.length,
+          };
+        }
+        if (threaded.length > 0) {
+          queensPerf.threaded = {
+            avgTime: (
+              threaded.reduce((sum, d) => sum + d.executionTime, 0) /
+              threaded.length
+            ).toFixed(2),
+            runs: threaded.length,
+            threads: threaded[0]?.threadCount || 4,
+          };
+        }
+      }
+
+      let hanoiPerf = { recursive: null, iterative: null };
+      if (hanoiRes.status === "fulfilled" && hanoiRes.value.data.success) {
+        const games = Array.isArray(hanoiRes.value.data.data)
+          ? hanoiRes.value.data.data
+          : [];
+        if (games.length > 0) {
+          const recursiveTimes = games
+            .filter((g) => g.recursiveTimeMs)
+            .map((g) => g.recursiveTimeMs);
+          const iterativeTimes = games
+            .filter((g) => g.iterativeTimeMs)
+            .map((g) => g.iterativeTimeMs);
+
+          if (recursiveTimes.length > 0) {
+            hanoiPerf.recursive = {
+              avgTime: (
+                recursiveTimes.reduce((a, b) => a + b, 0) /
+                recursiveTimes.length
+              ).toFixed(2),
+              runs: recursiveTimes.length,
+            };
+          }
+          if (iterativeTimes.length > 0) {
+            hanoiPerf.iterative = {
+              avgTime: (
+                iterativeTimes.reduce((a, b) => a + b, 0) /
+                iterativeTimes.length
+              ).toFixed(2),
+              runs: iterativeTimes.length,
+            };
+          }
+        }
+      }
+
+      let trafficPerf = { fordFulkerson: null, edmondsKarp: null };
+      if (trafficRes.status === "fulfilled" && trafficRes.value.data.success) {
+        const games = Array.isArray(trafficRes.value.data.data)
+          ? trafficRes.value.data.data
+          : [];
+        if (games.length > 0) {
+          const algo1Times = games
+            .filter((g) => g.algorithm1Time)
+            .map((g) => g.algorithm1Time);
+          const algo2Times = games
+            .filter((g) => g.algorithm2Time)
+            .map((g) => g.algorithm2Time);
+
+          if (algo1Times.length > 0) {
+            trafficPerf.fordFulkerson = {
+              avgTime: (
+                algo1Times.reduce((a, b) => a + b, 0) / algo1Times.length
+              ).toFixed(2),
+              runs: algo1Times.length,
+            };
+          }
+          if (algo2Times.length > 0) {
+            trafficPerf.edmondsKarp = {
+              avgTime: (
+                algo2Times.reduce((a, b) => a + b, 0) / algo2Times.length
+              ).toFixed(2),
+              runs: algo2Times.length,
+            };
+          }
+        }
+      }
+
+      let tspPerf = { primMST: null, dijkstraSPT: null, greedyTSP: null };
+      if (tspRes.status === "fulfilled" && tspRes.value.data.success) {
+        const data = tspRes.value.data.data || tspRes.value.data.data;
+
+        if (data) {
+          tspPerf = {
+            primMST:
+              data.primMSTTimeMs !== undefined
+                ? { avgTime: data.primMSTTimeMs }
+                : null,
+            dijkstraSPT:
+              data.dijkstraSPTTimeMs !== undefined
+                ? { avgTime: data.dijkstraSPTTimeMs }
+                : null,
+            greedyTSP:
+              data.greedyTSTimeMs !== undefined
+                ? { avgTime: data.greedyTSTimeMs }
+                : null,
+          };
+        }
+      }
+
+      let snakePerf = { bfs: null, dijkstra: null };
+      if (snakeRes.status === "fulfilled" && snakeRes.value.data.success) {
+        const performance = Array.isArray(snakeRes.value.data.data.performance)
+          ? snakeRes.value.data.data.performance
+          : [];
+        const bfsTimes = performance
+          .filter((p) => p.algorithmName === "BFS")
+          .map((p) => p.timeTakenNanos);
+        const dijkstraTimes = performance
+          .filter((p) => p.algorithmName === "Dijkstra")
+          .map((p) => p.timeTakenNanos);
+        if (bfsTimes.length > 0) {
+          snakePerf.bfs = {
+            avgTime: (
+              bfsTimes.reduce((a, b) => a + b, 0) / bfsTimes.length
+            ).toFixed(0),
+            runs: bfsTimes.length,
+          };
+        }
+        if (dijkstraTimes.length > 0) {
+          snakePerf.dijkstra = {
+            avgTime: (
+              dijkstraTimes.reduce((a, b) => a + b, 0) / dijkstraTimes.length
+            ).toFixed(0),
+            runs: dijkstraTimes.length,
+          };
+        }
+      }
+
+      setAlgoPerformance({
+        queens: queensPerf,
+        hanoi: hanoiPerf,
+        traffic: trafficPerf,
+        tsp: tspPerf,
+        snake: snakePerf,
+      });
+    } catch (error) {
+      console.error("Error fetching algorithm performance:", error);
     }
   };
 
@@ -339,7 +519,6 @@ const Dashboard = () => {
           Here's your gaming progress and statistics
         </p>
       </div>
-
       {/* Overall Stats */}
       <div className="grid grid-cols-1 gap-4 mb-8 md:grid-cols-2 lg:grid-cols-4">
         {overallStats.map((stat, index) => (
@@ -373,7 +552,6 @@ const Dashboard = () => {
           </div>
         ))}
       </div>
-
       {/* Game Stats */}
       <h2
         className="mb-4 text-2xl font-bold"
@@ -445,45 +623,338 @@ const Dashboard = () => {
           </div>
         ))}
       </div>
-
-      {/* Quick Actions */}
       <h2
         className="mb-4 text-2xl font-bold"
         style={{ color: theme.textPrimary }}
       >
-        Quick Actions
+        Algorithm Performance Comparison ⚡
       </h2>
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-        {gameCards.map((game) => (
-          <button
-            key={game.id}
-            onClick={() => navigate(game.path)}
-            className="p-4 transition-all duration-300 rounded-xl"
-            style={{
-              background: `${game.color}20`,
-              border: `2px solid ${game.color}40`,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "scale(1.05)";
-              e.currentTarget.style.borderColor = game.color;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "scale(1)";
-              e.currentTarget.style.borderColor = `${game.color}40`;
-            }}
-          >
-            <div className="mb-2 text-3xl">{game.icon}</div>
-            <p
-              className="text-sm font-semibold"
+      <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2 lg:grid-cols-3">
+        <div
+          className="p-6 rounded-xl"
+          style={{
+            background: theme.surface,
+            border: `2px solid #9b59b620`,
+          }}
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className="text-3xl">♛</div>
+            <h3
+              className="text-lg font-bold"
               style={{ color: theme.textPrimary }}
             >
-              Play Now
-            </p>
-          </button>
-        ))}
-      </div>
+              8-Queens Algorithms
+            </h3>
+          </div>
+          <div className="space-y-3">
+            <div
+              className="flex items-center justify-between p-3 rounded-lg"
+              style={{ background: "#9b59b615" }}
+            >
+              <div className="flex items-center gap-2">
+                <Cpu size={18} style={{ color: "#9b59b6" }} />
+                <span style={{ color: theme.textSecondary }}>Sequential</span>
+              </div>
+              <div className="text-right">
+                <span
+                  className="font-bold"
+                  style={{ color: theme.textPrimary }}
+                >
+                  {algoPerformance.queens.sequential?.avgTime || "-"} ms
+                </span>
+                {algoPerformance.queens.sequential?.runs && (
+                  <p className="text-xs" style={{ color: theme.textSecondary }}>
+                    {algoPerformance.queens.sequential.runs} runs
+                  </p>
+                )}
+              </div>
+            </div>
+            <div
+              className="flex items-center justify-between p-3 rounded-lg"
+              style={{ background: "#9b59b615" }}
+            >
+              <div className="flex items-center gap-2">
+                <Zap size={18} style={{ color: "#e74c3c" }} />
+                <span style={{ color: theme.textSecondary }}>
+                  Threaded (4 threads)
+                </span>
+              </div>
+              <div className="text-right">
+                <span
+                  className="font-bold"
+                  style={{ color: theme.textPrimary }}
+                >
+                  {algoPerformance.queens.threaded?.avgTime || "-"} ms
+                </span>
+                {algoPerformance.queens.threaded?.runs && (
+                  <p className="text-xs" style={{ color: theme.textSecondary }}>
+                    {algoPerformance.queens.threaded.runs} runs
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
 
-      {/* Achievements Section */}
+        {/* Tower of Hanoi Algorithms */}
+        <div
+          className="p-6 rounded-xl"
+          style={{
+            background: theme.surface,
+            border: `2px solid #f39c1220`,
+          }}
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className="text-3xl">🗼</div>
+            <h3
+              className="text-lg font-bold"
+              style={{ color: theme.textPrimary }}
+            >
+              Hanoi Algorithms
+            </h3>
+          </div>
+          <div className="space-y-3">
+            <div
+              className="flex items-center justify-between p-3 rounded-lg"
+              style={{ background: "#f39c1215" }}
+            >
+              <div className="flex items-center gap-2">
+                <Timer size={18} style={{ color: "#f39c12" }} />
+                <span style={{ color: theme.textSecondary }}>Recursive</span>
+              </div>
+              <div className="text-right">
+                <span
+                  className="font-bold"
+                  style={{ color: theme.textPrimary }}
+                >
+                  {algoPerformance.hanoi.recursive?.avgTime || "-"} ms
+                </span>
+                {algoPerformance.hanoi.recursive?.runs && (
+                  <p className="text-xs" style={{ color: theme.textSecondary }}>
+                    {algoPerformance.hanoi.recursive.runs} runs
+                  </p>
+                )}
+              </div>
+            </div>
+            <div
+              className="flex items-center justify-between p-3 rounded-lg"
+              style={{ background: "#f39c1215" }}
+            >
+              <div className="flex items-center gap-2">
+                <Cpu size={18} style={{ color: "#27ae60" }} />
+                <span style={{ color: theme.textSecondary }}>Iterative</span>
+              </div>
+              <div className="text-right">
+                <span
+                  className="font-bold"
+                  style={{ color: theme.textPrimary }}
+                >
+                  {algoPerformance.hanoi.iterative?.avgTime || "-"} ms
+                </span>
+                {algoPerformance.hanoi.iterative?.runs && (
+                  <p className="text-xs" style={{ color: theme.textSecondary }}>
+                    {algoPerformance.hanoi.iterative.runs} runs
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Traffic Simulation Algorithms */}
+        <div
+          className="p-6 rounded-xl"
+          style={{
+            background: theme.surface,
+            border: `2px solid #3498db20`,
+          }}
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className="text-3xl">🚦</div>
+            <h3
+              className="text-lg font-bold"
+              style={{ color: theme.textPrimary }}
+            >
+              Max Flow Algorithms
+            </h3>
+          </div>
+          <div className="space-y-3">
+            <div
+              className="flex items-center justify-between p-3 rounded-lg"
+              style={{ background: "#3498db15" }}
+            >
+              <div className="flex items-center gap-2">
+                <Activity size={18} style={{ color: "#3498db" }} />
+                <span style={{ color: theme.textSecondary }}>
+                  Ford-Fulkerson
+                </span>
+              </div>
+              <div className="text-right">
+                <span
+                  className="font-bold"
+                  style={{ color: theme.textPrimary }}
+                >
+                  {algoPerformance.traffic.fordFulkerson?.avgTime || "-"} ms
+                </span>
+                {algoPerformance.traffic.fordFulkerson?.runs && (
+                  <p className="text-xs" style={{ color: theme.textSecondary }}>
+                    {algoPerformance.traffic.fordFulkerson.runs} runs
+                  </p>
+                )}
+              </div>
+            </div>
+            <div
+              className="flex items-center justify-between p-3 rounded-lg"
+              style={{ background: "#3498db15" }}
+            >
+              <div className="flex items-center gap-2">
+                <Zap size={18} style={{ color: "#e67e22" }} />
+                <span style={{ color: theme.textSecondary }}>Edmonds-Karp</span>
+              </div>
+              <div className="text-right">
+                <span
+                  className="font-bold"
+                  style={{ color: theme.textPrimary }}
+                >
+                  {algoPerformance.traffic.edmondsKarp?.avgTime || "-"} ms
+                </span>
+                {algoPerformance.traffic.edmondsKarp?.runs && (
+                  <p className="text-xs" style={{ color: theme.textSecondary }}>
+                    {algoPerformance.traffic.edmondsKarp.runs} runs
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* TSP Algorithms */}
+        <div
+          className="p-6 rounded-xl"
+          style={{
+            background: theme.surface,
+            border: `2px solid #e67e2220`,
+          }}
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className="text-3xl">🗺️</div>
+            <h3
+              className="text-lg font-bold"
+              style={{ color: theme.textPrimary }}
+            >
+              TSP Algorithms
+            </h3>
+          </div>
+          <div className="space-y-3">
+            <div
+              className="flex items-center justify-between p-3 rounded-lg"
+              style={{ background: "#e67e2215" }}
+            >
+              <div className="flex items-center gap-2">
+                <Activity size={18} style={{ color: "#27ae60" }} />
+                <span style={{ color: theme.textSecondary }}>Prim's MST</span>
+              </div>
+              <div className="text-right">
+                <span
+                  className="font-bold"
+                  style={{ color: theme.textPrimary }}
+                >
+                  {algoPerformance.tsp.primMST?.avgTime} ms
+                </span>
+              </div>
+            </div>
+            <div
+              className="flex items-center justify-between p-3 rounded-lg"
+              style={{ background: "#e67e2215" }}
+            >
+              <div className="flex items-center gap-2">
+                <Target size={18} style={{ color: "#3498db" }} />
+                <span style={{ color: theme.textSecondary }}>Dijkstra SPT</span>
+              </div>
+              <div className="text-right">
+                <span
+                  className="font-bold"
+                  style={{ color: theme.textPrimary }}
+                >
+                  {algoPerformance.tsp.dijkstraSPT?.avgTime} ms
+                </span>
+              </div>
+            </div>
+            <div
+              className="flex items-center justify-between p-3 rounded-lg"
+              style={{ background: "#e67e2215" }}
+            >
+              <div className="flex items-center gap-2">
+                <TrendingUp size={18} style={{ color: "#9b59b6" }} />
+                <span style={{ color: theme.textSecondary }}>Greedy TSP</span>
+              </div>
+              <div className="text-right">
+                <span
+                  className="font-bold"
+                  style={{ color: theme.textPrimary }}
+                >
+                  {algoPerformance.tsp.greedyTSP?.avgTime} ms
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          className="p-6 rounded-xl"
+          style={{
+            background: theme.surface,
+            border: `2px solid #27ae6020`,
+          }}
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <div className="text-3xl">🐍</div>
+            <h3
+              className="text-lg font-bold"
+              style={{ color: theme.textPrimary }}
+            >
+              Snake and Ladder
+            </h3>
+          </div>
+          <div className="space-y-3">
+            <div
+              className="flex items-center justify-between p-3 rounded-lg"
+              style={{ background: "#27ae6015" }}
+            >
+
+              <div className="flex items-center gap-2">
+                <Activity size={18} style={{ color: "#27ae60" }} />
+                <span style={{ color: theme.textSecondary }}>BFS</span>
+              </div>
+              <div className="text-right">
+                <span
+                  className="font-bold"
+                  style={{ color: theme.textPrimary }}
+                >
+                  {algoPerformance.snake.bfs?.avgTime || "-"} ns
+                </span>
+              </div>
+            </div>
+            <div
+              className="flex items-center justify-between p-3 rounded-lg"
+              style={{ background: "#27ae6015" }}
+            >
+              <div className="flex items-center gap-2">
+                <Zap size={18} style={{ color: "#e74c3c" }} />
+                <span style={{ color: theme.textSecondary }}>Dijkstra</span>
+              </div>
+              <div className="text-right">
+                <span
+                  className="font-bold"
+                  style={{ color: theme.textPrimary }}
+                >
+                  {algoPerformance.snake.dijkstra?.avgTime || "-"} ns
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       {stats.overall.totalCorrect >= 5 && (
         <div className="mt-8">
           <h2
