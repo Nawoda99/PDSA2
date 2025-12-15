@@ -34,7 +34,7 @@ const Login = () => {
     try {
       const result = await login(trimmed);
       if (result.success) {
-        showNotification(`Welcome, ${result.user.username}!`, "success");
+        //showNotification(`Welcome, ${result.user.username}!`, "success");
         try {
           if (document.documentElement.requestFullscreen) {
             await document.documentElement.requestFullscreen();
